@@ -1,0 +1,167 @@
+/* 🌟 Base Layout */
+body.dashboard-body {
+  margin: 0;
+  font-family: 'Lexend', sans-serif;
+  background-color: #fffef7;
+  color: #212121;
+  display: flex;
+}
+
+.page-content {
+  flex: 1;
+  padding: 2rem 3rem;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.user-container {
+  width: 100%;
+}
+
+/* 🏷️ Section Title */
+.section-title {
+  font-size: 22px;
+  color: #de4248;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+/* 📋 Form Styles */
+.user-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+  margin-bottom: 40px;
+}
+
+.user-form .form-row {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-form label {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.user-form input,
+.user-form select,
+.user-form textarea {
+  padding: 10px;
+  font-size: 15px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #f2f2f2;
+  color: #212121;
+  font-family: 'Lexend', sans-serif;
+}
+
+.user-form input[readonly] {
+  background-color: #eaeaea;
+  color: #777;
+}
+
+/* ✅ Submit Button */
+.submit-btn {
+font-family: 'Lexend', sans-serif;
+  grid-column: span 1;
+  background-color: #f87d34;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #de4248;
+}
+
+/* 📊 Table Styles */
+.user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.user-table thead {
+  background-color: #f87d34;
+  color: white;
+}
+
+.user-table th,
+.user-table td {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 15px;
+}
+
+.user-table tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.user-table td .action-btn {
+  margin-right: 10px;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.action-edit {
+  background-color: #f1c40f;
+  color: #fff;
+}
+
+.action-delete {
+  background-color: #e74c3c;
+  color: #fff;
+}
+
+/* 🟠 Status Labels */
+.status-pending {
+  color: #e67e22;
+  font-weight: 500;
+}
+
+.status-active,
+.status-complete {
+  color: #27ae60;
+  font-weight: 500;
+}
+
+.user-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid #de4248;
+  border-radius: 6px;
+  font-family: 'Lexend', sans-serif;
+  font-size: 14px;
+}
+
+
+
+

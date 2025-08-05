@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Assessments - Solyte</title>
+  <link href="/css/assessments.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/question_engine.js" defer></script>
+  <script src="/js/assessments.js" defer></script>
+</head>
+<body>
+  <div class="page-content dashboard-body">
+    <div class="user-container">
+
+      <h2 class="section-title">📋 Create Assessment</h2>
+
+      <!-- Core Assessment Form -->
+      <form id="assessments-form" class="user-form">
+        <div class="form-row">
+  <label>Assessment ID</label>
+  <input type="text" id="assessment_id" readonly />
+</div>
+        <div class="form-row"><label>Title *</label><input type="text" id="name" required /></div>
+        <div class="form-row"><label>Description</label><textarea id="description" rows="3"></textarea></div>
+        <div class="form-row"><label>Total Questions *</label><input type="number" id="total_questions" required min="1" /></div>
+        <div class="form-row"><label>Time Limit (minutes)</label><input type="number" id="time_limit_minutes" /></div>
+        <div class="form-row"><label>Max Attempts</label><input type="number" id="max_attempts" min="1" /></div>
+        <div class="form-row">
+          <label><input type="checkbox" id="randomize_questions" checked /> Randomize Questions</label>
+          <label><input type="checkbox" id="randomize_options" checked /> Randomize Options</label>
+          <label><input type="checkbox" id="allow_resume" checked /> Allow Resume</label>
+        </div>
+      </form>
+
+      <!-- 🧠 Tendency Selection -->
+      <h2 class="section-title">🧠 Assign Tendencies</h2>
+      <div id="tendency-tag-selector" class="tag-grid"></div>
+
+      <div class="tag-container">
+        <div id="tendency-tag-selector-2" class="tag-selector"></div>
+        <div class="badge-container" id="selected-tendency-tags"></div>
+      </div>
+
+
+      
+      <!-- Mapping Table -->
+       
+      <table id="tendency-weight-table" class="user-table" style="margin-top: 20px;">
+        
+        <thead>
+          <tr>
+            <th>Tendency</th>
+            <th>Dimension</th>
+            <th>Weight %</th>            
+            <th>Remove</th>
+          </tr>
+          
+        </thead>
+        
+        <tbody></tbody>
+        
+      </table>
+
+      <!-- Submit Button -->
+      <div class="form-row" style="margin-top: 20px; text-align: center;">
+  <button type="submit" form="assessments-form" class="submit-btn">
+    💾 Save Assessment & Tendencies
+  </button>
+</div>
+
+<div style="display: flex; align-items: center; text-align: center; margin: 2rem 0;">
+  <hr style="flex: 1; border: none; border-top: 1px solid #de4248;" />
+  <span style="padding: 0 1rem; font-weight: 500; color: #545454;">Saved Assessments</span>
+  <hr style="flex: 1; border: none; border-top: 1px solid #de4248;" />
+</div>
+
+
+      <!-- 📋 Assessment List Table -->
+<h2 class="section-title">📋 All Assessments</h2>
+
+<div class="user-actions-bar">
+  <button id="export-btn" class="submit-btn">⬇ Export CSV</button>
+  <input type="text" id="search-input" placeholder="🔍 Search assessments..." class="search-box" />
+  <div id="pagination" class="pagination" style="margin-top: 16px;"></div>
+  
+</div>
+
+<table class="user-table">
+ 
+
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Title</th>
+      <th>Total Questions</th>
+      <th>Time Limit</th>
+      <th>Created At</th>
+      <th>Status</th>
+      <th>Created By</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="assessment-table-body"></tbody>
+</table>
+
+
+
+
+    </div>
+
+
+  
+</body>
+</html>

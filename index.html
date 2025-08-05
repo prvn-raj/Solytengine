@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Solyte Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Asap&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="/js/supabaseClient.js" defer></script>
+<script src="/js/login.js" defer></script>
+<link rel="stylesheet" href="/css/login.css"/>
+</head>
+<body>
+  <form class="login" id="login-form">
+    <img src="/assets/logo.png" alt="Solyte Logo" class="mx-auto mb-4 w-24 h-auto" />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Login</button>
+    <p id="error-message" class="error-message hidden"></p>
+  <p class="text-sm text-center mt-4">
+  <a href="#" id="forgot-password-link" class="text-[#de4248] hover:underline">
+    Forgot Password?
+  </a>
+</p>
+  </form>
+
+
+
+ 
+</body>
+</html>

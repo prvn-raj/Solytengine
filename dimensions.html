@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Dimensions - Solyte</title>
+  <link href="/css/dimensions.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/dimensions.js" defer></script>
+</head>
+<body>
+  <div class="page-content dashboard-body">
+    <div class="user-container">
+      
+      <!-- 🧠 Add Dimension -->
+      <h2 class="section-title">➕ Add Dimension</h2>
+      <form id="dimension-form" class="user-form">
+        <div class="form-row">
+          <label for="dimension-id">Dimension ID</label>
+          <input type="text" id="dimension-id" readonly />
+        </div>
+        <div class="form-row">
+          <label for="dimension-name">Name *</label>
+          <input type="text" id="dimension-name" required />
+        </div>
+        <div class="form-row">
+          <label for="dimension-description">Description</label>
+          <textarea id="dimension-description" rows="1"></textarea>
+        </div>
+         <div class="form-row"> 
+  <label for="dimension-color">Color Tag *</label>
+  <select id="dimension-color" required>
+    <option value="#E74C3C">❤️ Red</option>
+    <option value="#3498DB">💙 Blue</option>
+    <option value="#27AE60">💚 Green</option>
+    <option value="#F1C40F">💛 Yellow</option>
+    <option value="#9B59B6">💜 Purple</option>
+    <option value="#E67E22">🧡 Orange</option>
+  </select>
+</div>
+        <div class="form-row">
+ 
+</div>
+        <div class="form-row">
+          <label>&nbsp;</label>
+          <button type="submit" class="submit-btn">💾 Save Dimension</button>
+        </div>
+      </form>
+
+      <!-- 📋 All Dimensions Table -->
+      <h2 class="section-title" id="dimension-title">🧠 All Dimensions</h2>
+      <div class="user-actions-bar">
+        <button id="export-btn">⬇ Export CSV</button>
+        <div id="pagination" class="pagination"></div>        
+      </div>
+      <div id="dimension-list">
+        <table class="dimension-table">
+          <thead>
+            <tr>
+              <th>Dimension ID</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Created By</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="dimension-table-body">
+            <tr><td colspan="5" style="text-align:center;">⏳ Loading dimensions...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      
+    </div>
+  </div>
+</body>
+</html>

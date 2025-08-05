@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports - Solyte</title>
+  <link href="/css/reports.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/reports.js" defer></script>
+</head>
+<body class="dashboard-body">
+  <div class="page-content">
+
+    <h2 class="section-title">✅ Completed Assessments</h2>
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Assessment</th>
+          <th>Completed On</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="completed-summary-body">
+        <tr><td colspan="5">⏳ Loading completed assessments...</td></tr>
+      </tbody>
+    </table>
+
+    <section id="response-detail-section" class="hidden">
+      <h3 class="section-title">🧾 Response Details</h3>
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Assessment</th>
+            <th>Question</th>
+            <th>Option</th>
+            <th>Time (s)</th>
+            <th>Tendencies</th>
+            <th>Dimensions</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody id="response-detail-body">
+          <tr><td colspan="8">Select a completed assessment to view responses.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h2 class="section-title">📊 Assessment Assignments Overview</h2>
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Assessment</th>
+          <th>Target</th>
+          <th>Users</th>
+          <th>Completed</th>
+          <th>Progress</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="assignment-summary-body">
+        <tr><td colspan="7">⏳ Loading assignments...</td></tr>
+      </tbody>
+    </table>
+
+  </div>
+</body>
+</html>

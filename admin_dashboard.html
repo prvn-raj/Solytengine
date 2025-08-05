@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard - Solyte</title>
+
+  <link rel="stylesheet" href="/css/admin_dashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/admin_dashboard.js" defer></script>
+</head>
+<body class="dashboard-body">
+  <div class="sidebar">
+    <div class="logo-container">
+      <img src="/assets/logo1.png" alt="Solyte Logo" />
+    </div>
+    <ul class="nav">
+      <li><a href="#" data-page="dashboard.html" class="active">📊 Dashboard</a></li>
+      <!-- MindMatrix Parent Link -->
+<li class="nav-item has-submenu">
+  <a href="#" id="mindmatrix-toggle" class="submenu-toggle">🧠 MindMatrix</a>
+  <ul class="submenu" id="mindmatrix-submenu">
+    <li><a href="#" class="sidebar-sublink" data-page="dimensions.html">📐 Dimensions</a></li>
+    <li><a href="#" class="sidebar-sublink" data-page="tendencies.html">🧭 Tendencies</a></li>
+    <li><a href="#" class="sidebar-sublink" data-page="questions.html">❓ Questions</a></li>
+  </ul>
+</li>
+
+
+      
+      <li><a href="#" data-page="assessments.html">📋 Assessments</a></li>
+      <li><a href="#" data-page="users.html">👤 Users</a></li>
+      <li><a href="#" data-page="cohorts.html">👥 Cohorts</a></li>
+      <li><a href="#" data-page="assignments.html">🎯 Assignments</a></li>
+      <li><a href="#" data-page="reports.html">📈 Reports</a></li>
+    </ul>
+    <div class="logout-wrapper">
+      <button id="logout-btn" class="logout-btn">🚪 Logout</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <span>Welcome, Admin</span>
+    </div>
+
+    <!-- Dynamic Content Area -->
+    <div id="content-area">
+      <!-- Dashboard loads here by default -->
+    </div>
+  </div>
+</body>
+</html>

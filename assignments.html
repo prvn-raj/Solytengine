@@ -1,0 +1,71 @@
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Assign Assessments - Solyte</title>
+    <link href="/css/assignments.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+    <script src="/js/supabaseClient.js" defer></script>
+    <script src="/js/assignments.js" defer></script>
+  </head>
+  <body class="dashboard-body">
+    <div class="page-content">
+      <h2 class="section-title">🎯 Assign Assessments</h2>
+
+      <!-- Step 1: Select Targets -->
+      <div class="assignment-section">
+
+        <h3>🧑‍🤝‍🧑 Select Recipients</h3>
+              <input type="text" id="recipient-search" placeholder="🔍 Filter recipients..." class="search-box" style="margin-bottom: 10px;" />
+
+        <div id="recipient-list" class="recipient-list"></div>
+      </div>
+
+      <!-- Step 2: Drag and Drop Assessments -->
+      <div class="assignment-section">
+        <h3>📚 Available Assessments</h3>
+        <div id="assessment-pool" class="assessment-pool"></div>
+      </div>
+
+      <div class="assignment-section">
+        <h3>📦 Drop Assessments Here</h3>
+        <div id="drop-zone" class="assignment-dropzone">Drop assessments here...</div>
+      </div>
+
+      <div class="form-row" style="margin-top: 24px; text-align: center;">
+        <button id="save-assignment-btn" class="submit-btn">💾 Save Assignment</button>
+      </div>
+
+      <!-- View All Assignments -->
+      <div class="assignment-section">
+        <h3>📋 Existing Assignments</h3>
+        <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+          <button id="export-btn" class="submit-btn"> ⤓ Export CSV</button>
+          <input type="text" id="search-input" placeholder="🔍 Search by user or cohort" class="search-box" />
+          <div id="pagination" class="pagination-controls" style="margin-top: 16px; text-align: center;"></div>
+
+
+        </div>
+        <table class="assignment-table">
+          <thead>
+            <tr>
+              <th>Target User/Cohort</th>
+  <th>Target Type</th>
+  <th>Assessments</th>
+  <th>Created At</th>
+  <th>Actions</th>
+
+            </tr>
+          </thead>
+          <tbody id="assignment-list">
+            <tr><td colspan="6" style="text-align:center">⏳ Loading...</td></tr>
+          </tbody>
+        </table>
+      
+
+      </div>
+    </div>
+  </body>
+  </html>

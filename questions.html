@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Questions - Solyte</title>
+  <link href="/css/questions.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/questions.js" defer></script>
+</head>
+<body>
+  <div class="page-content dashboard-body">
+    <div class="user-container">
+      <!-- ➕ Add Question Form -->
+      <h2 class="section-title">➕ Add Question</h2>
+      <form id="question-form" class="user-form">
+        <div class="form-row">
+          <label>Behaviour ID</label>
+          <input type="text" id="question_id" readonly />
+        </div>
+        <div class="form-row">
+          <label>Question *</label>
+          <textarea id="question_text" required placeholder="Type your question here..."></textarea>
+        </div>
+        <div class="form-row">
+          <label>Dimension *</label>
+          <select id="dimension" required>
+            <option value="">Select Dimension</option>
+             <!-- dynamically populated -->
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Difficulty *</label>
+          <select id="difficulty" required>
+            <option value="">Select Difficulty</option>
+            <option value="1">Easy</option>
+            <option value="2">Moderate</option>
+            <option value="3">Challenging</option>
+            <option value="4">Hard</option>
+            <option value="5">Expert</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <label>Question Type *</label>
+          <select id="question_type" required>
+            <option value="">Select Type</option>
+            <option value="multiple_choice">Multiple Choice</option>
+            <option value="true_false">True/False</option>
+            <option value="sort_order">Sort Order</option>
+          </select>
+        </div>
+
+        <!-- 🎯 Option Mapping Container -->
+        <div class="form-row" style="grid-column: span 2;">
+          <label>Options & Tendency Mapping *</label>
+          <div id="options-container"></div>
+          <button type="button" id="add-option-btn" class="submit-btn" style="margin-top: 10px;">➕ Add Option</button>
+        </div>
+
+        <button type="submit" class="submit-btn">💾 Save Behaviour</button>
+      </form>
+
+      <!-- 📋 Questions List -->  
+      <h2 class="section-title" id="question-title">📋 All Questions</h2>
+      <div class="user-actions-bar">
+        <button id="export-btn" class="submit-btn"> ⤓ Export CSV</button>
+        <input type="text" id="search-input" class="search-box" placeholder="🔍 Search questions, dimensions..." />
+        <div id="pagination" class="pagination"></div>
+      </div>
+<div id="tendency-modal" class="modal">
+  <div class="modal-content">
+    <span id="tendency-modal-close" class="modal-close">&times;</span>
+    <h3 id="tendency-modal-title">Tendencies for Question</h3>
+    <div id="tendency-badges" class="badge-container"></div>
+  </div>
+</div>
+
+      <table class="user-table">
+        <thead>
+          <tr>  
+            <th id="sort-id" style="cursor:pointer;">Behaviour ID ⬍</th>
+            <th>Question</th>
+            <th>Type</th>
+            <th>Dimension</th>
+            <th>Difficulty</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="question-table-body">
+          <tr><td colspan="6" style="text-align:center;">⏳ Loading questions...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

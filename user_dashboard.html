@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Dashboard - Solyte</title>
+  <link href="/css/user_dashboard.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/user_dashboard.js" defer></script>
+</head>
+<body>
+  <div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo-container">
+        <img src="/assets/logo1.png" alt="Solyte Logo" />
+      </div>
+      <ul class="nav">
+        <li><a href="#" data-section="profile">👤 Profile</a></li>
+        <li><a href="#" class="active" data-section="assessments">📋 Assessments</a></li>
+        <li><a href="#" data-section="reports">📊 Reports</a></li>
+        
+      </ul>
+      <div class="logout-wrapper">
+        <button id="logout-btn">🚪 Logout</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+   <main class="main">
+  <!-- Dynamic area for profile -->
+  <div id="user-dashboard-content"></div>
+
+  <!-- Keep these outside so they are not wiped -->
+  <h2 id="welcome-user" class="welcome-heading"></h2>
+  <p class="subtitle">Your personalized assessments and reports</p>
+
+  <!-- Password Change Section -->
+  <section id="password-change-section" class="card hidden">
+    <h2>🔑 Change Your Password</h2>
+    <form id="change-password-form" class="user-form">
+      <input type="password" id="new-password" placeholder="Enter new password" required />
+      <button type="submit" class="submit-btn">💾 Update</button>
+    </form>
+    <p id="password-change-status" class="status-message hidden"></p>
+  </section>
+
+  <!-- Assigned Assessments Section -->
+  <section id="assigned-assessments" class="card hidden">
+    <h2>📋 Your Assessments</h2>
+    <div id="assessment-list" class="assessment-container">
+      <p class="info">⏳ Loading your assessments...</p>
+    </div>
+  </section>
+</main>
+
+  </div>
+</body>
+</html>

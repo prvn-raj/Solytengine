@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Tendencies - Solyte</title>
+  <link href="/css/tendencies.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/tendencies.js" defer></script>
+</head>
+<body>
+  <div class="page-content dashboard-body">
+    <div class="user-container">
+
+      <!-- 🧭 Add Tendency Form -->
+      <h2 class="section-title">➕ Add Tendency</h2>
+      <form id="tendency-form" class="user-form">
+        <div class="form-row">
+          <label for="tendency-id">Tendency ID</label>
+          <input type="text" id="tendency-id" readonly />
+        </div>
+
+        <div class="form-row">
+          <label for="tendency-name">Name *</label>
+          <input type="text" id="tendency-name" required />
+        </div>
+
+        <div class="form-row">
+          <label for="tendency-description">Description</label>
+          <textarea id="tendency-description" rows="1"></textarea>
+        </div>
+
+        <div class="form-row">
+  <label for="dimension-select">Dimension *</label>
+  <select id="dimension-select" required style="font-weight: 600;"></select>
+</div>
+
+
+        <div class="form-row" id="color-select-row">
+          <label for="tendency-color">Tendency Color *</label>
+          <select id="tendency-color" required></select>
+        </div>
+
+        <div class="form-row">
+          <label for="tendency-status">Status</label>
+          <select id="tendency-status">
+            <option value="true">Active</option>
+            <option value="false">Inactive</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label>&nbsp;</label>
+          <button type="submit" class="submit-btn">💾 Save Tendency</button>
+        </div>
+      </form>
+
+      <!-- 📋 Tendencies Table -->
+      <h2 class="section-title" id="tendency-title">🧭 All Tendencies</h2>
+      <div class="user-actions-bar">
+        <button id="export-btn">⬇ Export CSV</button>
+        <input type="text" id="search-input" class="search-box" placeholder="🔍 Search tendency name..." />
+        <div id="pagination" class="pagination"></div>
+      </div>
+
+      <div id="tendency-list">
+        <table class="user-table">
+          <thead>
+            <tr>    
+              <th>Tendency ID</th>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Dimension</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tendency-table-body">
+            <tr><td colspan="6" style="text-align:center;">⏳ Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,298 @@
+/* ============================= */
+/* Global Styles */
+/* ============================= */
+body {
+  background: #fffef7; /* Solyte off-white background */
+  font-family: 'Lexend', sans-serif;
+  margin: 0;
+  color: #545454; /* Solyte grey */
+}
+
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+}
+
+/* ============================= */
+/* Sidebar (Updated) */
+/* ============================= */
+.sidebar {
+  background: #fffef7;
+  width: 240px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.08);
+}
+
+.sidebar .logo-container {
+  text-align: center;
+  padding: 20px 0;
+  background: #545454; /* Solyte grey */
+  border-bottom: 3px solid #f87d34; /* separator below logo bar */
+}
+
+.sidebar .logo-container img {
+  max-width: 140px;
+  height: auto;
+}
+
+.sidebar .nav {
+  list-style: none;
+  padding: 10px 0; /* extra padding below the separator */
+  margin: 0;
+}
+
+.sidebar .nav li {
+  margin-bottom: 4px; /* small gap between items */
+}
+
+.sidebar .nav a {
+  display: block;
+  margin: 0 10px;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #545454;
+  font-size: 1rem;
+  font-weight: 500;
+  border-radius: 8px; /* gives pill shape */
+  transition: all 0.2s ease;
+}
+
+.sidebar .nav a.active {
+  background: #de4248; /* selected item */
+  color: #fffef7;
+  font-weight: 600;
+  border-left: none; /* remove left border */
+}
+
+.sidebar .nav a:hover {
+  background: rgba(222, 66, 72, 0.1); /* light red tint hover for non-active */
+  color: #de4248;
+}
+
+.logout-wrapper button {
+  background: #f87d34; /* Solyte orange for contrast */
+  color: #fffef7;
+  border: none;
+  padding: 10px;
+  width: 90%;
+  margin: 0 auto;
+  display: block;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.logout-wrapper button:hover {
+  background: #de4248; /* Solyte red on hover */
+  transform: scale(1.03);
+}
+
+
+
+/* ============================= */
+/* Main Content */
+/* ============================= */
+.main {
+  flex: 1;
+  padding: 30px 40px;
+  overflow-y: auto;
+}
+
+.section-title {
+  font-size: 1.8rem;
+  color: #de4248;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.section-title::before {
+  content: "✨";
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: #545454;
+  margin-bottom: 24px;
+}
+
+/* ============================= */
+/* Cards */
+/* ============================= */
+.card {
+  background: #fffef7;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+/* Password form */
+.user-form {
+  display: flex;
+  gap: 10px;
+}
+
+.user-form input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 0.95rem;
+}
+
+.submit-btn {
+  background: #de4248;
+  color: #fffef7;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.submit-btn:hover {
+  background: #f87d34;
+}
+
+/* ============================= */
+/* Assessment List */
+/* ============================= */
+.assessment-container {
+  display: grid;
+  gap: 15px;
+}
+
+.assessment-group h3 {
+  font-weight: bold;
+  margin-bottom: 8px;
+  color: #545454;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 4px;
+}
+
+.assessment-card {
+  background: #fff;
+  border: 1px solid #f2f2f2;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.assessment-card h4 {
+  font-size: 1.05rem;
+  margin: 0 0 6px;
+  color: #545454;
+}
+
+.assessment-card p {
+  font-size: 0.9rem;
+  margin: 0;
+  color: #545454;
+}
+
+.start-btn {
+  background: #f87d34;
+  color: #fffef7;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  width: 9%;
+}
+
+.start-btn:hover {
+  background: #de4248;
+}
+
+/* ============================= */
+/* Status Badges */
+/* ============================= */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  margin-left: 6px;
+  font-weight: 600;
+}
+
+.status-not-started {
+  background: #ffe4e1;
+  color: #de4248;
+}
+
+.status-in-progress {
+  background: #fff4e5;
+  color: #f87d34;
+}
+
+.status-completed {
+  background: #e0f7e9;
+  color: #27ae60;
+}
+
+.info {
+  text-align: center;
+  font-size: 0.95rem;
+  color: #545454;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.disabled-btn {
+  position: relative;
+  background-color: #ccc;
+  color: #666;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: auto;
+}
+
+.disabled-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 125%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #333;
+  color: #fff;
+  font-size: 0.75rem;
+  padding: 6px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  z-index: 10;
+}
+
+.disabled-btn:hover::after {
+  opacity: 1;
+}
+
+.welcome-heading {
+  text-align: left;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #de4248;
+  text-transform: capitalize;
+}

@@ -1,0 +1,260 @@
+/* --- Cleaned and Consolidated assignments.css --- */
+
+body {
+  font-family: 'Lexend', sans-serif;
+  background: #fffefa;
+  margin: 0;
+  padding: 0;
+}
+
+.page-content {
+  padding: 20px 30px;
+}
+
+.section-title {
+  font-size: 22px;
+  color: #222;
+  margin-bottom: 20px;
+}
+
+.assignment-section {
+  margin-bottom: 30px;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 200px;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid #de4248;
+  border-radius: 6px;
+  font-family: 'Lexend', sans-serif;
+  font-size: 14px;
+}
+
+#recipient-list {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+  gap: 0.75rem;
+  padding: 0.3rem;
+}
+
+.recipient-group {
+  background: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.3rem;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+  flex: 1 1 250px;
+  min-width: 250px;
+}
+
+.recipient-group-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 0.3rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  user-select: none;
+}
+
+.recipient-group.collapsed .recipient-tag {
+  display: none;
+}
+
+.recipient-tag, .cohort-tag {
+  display: inline-block;
+  background: #e6f4ff;
+  color: #000;
+  border: 1px solid #c2e0ff;
+  padding: 0.35rem 0.7rem;
+  border-radius: 1rem;
+  margin: 0.2rem;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  white-space: nowrap;
+}
+
+.recipient-tag:hover,
+.cohort-tag:hover {
+  background: #cbe8ff;
+}
+
+.recipient-tag.selected,
+.cohort-tag.selected {
+  background-color: #bee1ff;
+  border-color: #0096f1;
+}
+
+.cohort-tag {
+  background-color: #fff4e6;
+  color: #b34b00;
+  border: 1px solid #ffbb66;
+}
+
+.cohort-tag.selected {
+  background-color: #ffd9b3;
+  border-color: #ff8800;
+}
+
+.assessment-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.assessment-block {
+  background: #fef0f0;
+  border: 1px solid #f667db;
+  padding: 10px;
+  width: 180px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  cursor: grab;
+  text-align: center;
+}
+
+.assignment-dropzone {
+  background: #f4f5ff;
+  border: 2px dashed #aaa;
+  padding: 15px;
+  min-height: 150px;
+  border-radius: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.assignment-block.droppable {
+  background: #e0f7fa;
+  border-color: #00bcd4;
+  position: relative;
+  width: 180px;
+}
+
+
+.assignment-block.droppable button {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: #ff4d4f;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.submit-btn {
+  font-family: 'Lexend', sans-serif;
+  background-color: #f87d34;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #de4248;
+}
+
+.assignment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 40px;
+  font-size: 14px;
+}
+
+.assignment-table th,
+.assignment-table td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.assignment-table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
+}
+
+.assignment-table td button {
+  background: none;
+  border: none;
+  color: #de4248;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.assignment-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.assignment-actions button {
+  font-size: 14px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.assignment-actions .edit-btn {
+  background-color: #ffe58f;
+  color: #8c6d1f;
+}
+
+.assignment-actions .delete-btn {
+  background-color: #ffa39e;
+  color: #a8071a;
+}
+
+.assessment-block:hover {
+  transform: scale(1.03);
+  background-color: #fff5fb;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease-in-out;
+}
+.assessment-block.drag-over {
+  outline: 2px dashed #fa0808;
+  background-color: #f0f0f0;
+}
+
+.assignment-box {
+  border: 1px solid #ccc;
+  background: #fff;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.assignment-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
+#recipient-panel,
+#assessment-panel,
+#drop-panel {
+  flex: 1 1 30%;
+  min-width: 280px;
+}
+
+.assignment-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}

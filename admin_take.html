@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Test Assessment</title>
+  <link rel="stylesheet" href="/css/admin_take.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/question_engine.js" defer></script>
+  <style>
+    .primary-tag {
+      font-weight: 700;
+      border: 2px solid #fff;
+      box-shadow: 0 0 4px rgba(255, 204, 0, 0.6);
+    }
+  </style>
+</head>
+<body class="dashboard-body">
+  <div class="page-content">
+    <div class="assessment-container">
+      <div class="section-header">
+        <h1 class="section-title">🧪 Assessment Preview</h1>
+        <p class="section-subtitle">This is a diagnostic preview of the assessment based on configured tendencies and available questions.</p>
+      </div>
+      <div id="report-area" class="diagnostic-card"></div>
+      <div style="text-align: center; margin-top: 20px;">
+  <button onclick="window.close()" class="submit-btn">✅ Close</button>
+</div>
+      <div id="question-container" class="question-list"></div>
+      
+    </div>
+  </div>
+<script>
+function getDifficultyClass(level) {
+  if (!level) return "level-default";
+  const n = parseInt(level);
+  if (n === 1) return "level-easy1";
+  if (n === 2) return "level-easy2";
+  if (n === 3) return "level-medium";
+  if (n === 4) return "level-hard1";
+  if (n === 5) return "level-hard2";
+  return "level-default";
+}
+
+window.addEventListener('DOMContentLoaded', async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const assessmentId = urlParams.get('id');
+
+ 
+  if (!assessmentId) {
+    document.getElementById('question-container').innerHTML = '<p>❌ No assessment ID provided.</p>';
+    return;
+  }
+  const { data: meta } = await client.from("assessments").select("total_questions").eq("id", assessmentId).single();
+  const { data: mapping } = await client.from("assessment_tendency_weights").select("*").eq("assessment_id", assessmentId);
+  const { data: tendencies } = await client.from("tendencies").select("id, name, color");
+  const { data: rawQuestions } = await client.from("questions").select("*, question_option_tendencies (tendency_id, option_value)").eq("is_active", true);
+  const questions = rawQuestions.map(q => ({
+    ...q,
+    tendency_ids: q.question_option_tendencies?.map(t => t.tendency_id) || [],
+    options: [...new Set(q.question_option_tendencies?.map(t => t.option_value))] || []
+  }));
+  const tendencyMap = {};
+  tendencies?.forEach(t => { tendencyMap[t.id] = { name: t.name, color: t.color }; });
+  const reportArea = document.getElementById('report-area');
+  reportArea.innerHTML = `
+    <h3 class="diagnostic-title">🧠 Assessment Diagnostic Check</h3>
+    <p class="diagnostic-subtitle">We analyzed the configured tendencies and validated question availability to ensure the assessment structure aligns with its behavioral objectives.</p>
+    <div class="diagnostic-grid" id="diagnostic-grid"></div>
+    <div id="diagnostic-conclusion" class="diagnostic-conclusion"></div>
+  `;
+  const diagnosticGrid = document.getElementById('diagnostic-grid');
+  const diagnostics = diagnoseTendencyCoverage(questions, mapping, meta.total_questions);
+  let hasGap = false;
+  let insufficientList = [];
+  diagnostics.forEach(item => {
+    const { name, color } = tendencyMap[item.tendency_id] || { name: item.tendency_id, color: '#CCC' };
+    const card = document.createElement('div');
+    card.className = "diagnostic-card-box";
+    card.innerHTML = `
+      <div class="tag-color" style="background:${color}" title="Buffered for random overlap tolerance"></div>
+      <div class="tendency-details">
+        <div class="tendency-name">${name}</div>
+        <div class="tendency-status">
+          ${item.available < item.bufferedRequired
+            ? `<span class="status-fail" title="Original: ${item.originalPercent}%, +30% buffer">⚠️ Only ${item.available} available, needs ${item.bufferedRequired}</span>`
+            : `<span class="status-pass" title="Original: ${item.originalPercent}%, +30% buffer">✅ ${item.available} available (picked: ${item.bufferedRequired})</span>`}
+        </div>
+      </div>
+    `;
+    diagnosticGrid.appendChild(card);
+    if (item.available < item.bufferedRequired) {
+      hasGap = true;
+      insufficientList.push(name);
+    }
+  });
+  const diagnosticConclusion = document.getElementById('diagnostic-conclusion');
+  diagnosticConclusion.innerHTML = hasGap
+
+    ? `<strong>⚠️ Not Ready:</strong> Review and add more questions for: <span class="insufficient-list">${insufficientList.join(", ")}</span>`
+    : `<strong>✅ All good!</strong> Your assessment is Ready.`;
+    // ✅ Update status in DB
+    if (!hasGap) {
+  await client
+    .from("assessments")
+    .update({ status: "ready" })
+    .eq("id", assessmentId);
+
+  // ✅ Notify main window to refresh
+  if (window.opener && !window.opener.closed) {
+    try {
+      window.opener.postMessage({ type: "refreshAssessments" }, "*");
+    } catch (e) {
+      console.warn("Unable to notify parent window:", e);
+    }
+  }
+}
+
+
+
+  const selectedQuestions = getQuestionsForAssessment(questions, mapping, meta.total_questions);
+  selectedQuestions.sort((a, b) => a.question_id.localeCompare(b.question_id));
+  renderQuestions(selectedQuestions, meta.total_questions, tendencyMap, mapping);
+
+  
+});
+function renderInputForQuestion(q) {
+  const type = q.question_type;
+  if (type === "true_false") {
+    return `<label><input type="radio" name="q-${q.id}" value="True" /> True</label><label><input type="radio" name="q-${q.id}" value="False" /> False</label>`;
+  }
+  if (type === "multiple_choice") {
+    const opts = q.options || [];
+    if (!opts.length) return `<div class="option-fallback">⚠️ No options configured for this question.</div>`;
+    return opts.map(opt => `<label class="option-label"><input type="radio" name="q-${q.id}" value="${opt}" />${opt}</label>`).join("");
+  }
+  return `<textarea class="response-box" placeholder="Your response..."></textarea>`;
+}
+function renderQuestions(questions, totalQuestions, tendencyMap, mapping) {
+  const container = document.getElementById('question-container');
+  container.innerHTML = "";
+  const progressBar = document.createElement("div");
+  progressBar.className = "progress-container";
+  progressBar.innerHTML = `<label class="progress-label">🎯 Available ${questions.length} of ${totalQuestions} questions</label><div class="progress-bar"><div class="progress-fill" style="width: ${Math.min(100, (questions.length / totalQuestions) * 100)}%"></div></div>`;
+  container.appendChild(progressBar);
+  const mappedTendencies = mapping.map(m => m.tendency_id);
+  questions.forEach((q, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'question-block';
+    const uniqueTendencies = [...new Set(q.tendency_ids)];
+    const tendencyTags = uniqueTendencies.map(tid => {
+      const t = tendencyMap[tid];
+      const isPrimary = mappedTendencies.includes(tid);
+      return `<span class="tendency-tag${isPrimary ? ' primary-tag' : ''}" style="background-color: ${t?.color || '#ccc'}">${t?.name || 'Unknown'}${isPrimary ? ' 🌟' : ''}</span>`;
+    }).join(" ");
+    wrapper.innerHTML = `
+      <div class="question-flex-row">
+        <div class="tendency-column">${tendencyTags}</div>
+        <div class="question-main">
+          <div class="question-difficulty-top ${getDifficultyClass(q.difficulty_level)}">
+            Level ${q.difficulty_level || 'N/A'} &nbsp;•&nbsp; <span style="font-weight: 400;">${q.question_id}</span>
+          </div>
+          <div class="question-header">
+            <div class="question-title"><strong>Q${i + 1}:</strong> ${q.question_text}</div>
+          </div>
+          <div class="question-options">${renderInputForQuestion(q)}</div>
+        </div>
+      </div>
+    `;
+    container.appendChild(wrapper);
+  });
+}
+</script>
+</body>
+</html>

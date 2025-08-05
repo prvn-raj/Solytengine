@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Manage Cohorts - Solyte</title>
+  <link href="/css/cohorts.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/cohorts.js" defer></script>
+</head>
+<body>
+  <div class="page-content dashboard-body">
+    <div class="user-container">
+      <h2 class="section-title">➕ Create Cohort</h2>
+      <form id="cohort-form" class="user-form">
+        <div class="form-row">
+          <label>Name *</label>
+          <input type="text" id="name" required />
+        </div>
+        <div class="form-row">
+          <label>Description</label>
+          <textarea id="description"></textarea>
+        </div>
+        <div class="form-row">
+          <label>Start Date</label>
+          <input type="date" id="start_date" />
+        </div>
+        <div class="form-row">
+          <label>End Date</label>
+          <input type="date" id="end_date" />
+        </div>
+        <div class="form-row" style="grid-column: span 2;">
+          <!-- <label>Select Users</label> -->
+          <input type="text" id="user-search" placeholder="Search users..." style="padding: 8px; width: 100%; margin-bottom: 10px;" />
+          <div style="max-height: 200px; overflow-y: auto;">
+            <table class="user-table">
+              <thead>
+  <tr>
+    <th><input type="checkbox" id="select-all-users" /></th>
+    <th>Name</th>
+    <th>Email</th>
+    <th>Company</th>
+  </tr>
+</thead>
+
+              <tbody id="user-checkbox-table">
+                <tr><td colspan="3" style="text-align:center;">⏳ Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <button type="submit" class="submit-btn" style="grid-column: span 2;">💾 Save Cohort</button>
+      </form>
+
+            <h2 class="section-title" id="cohort-title">👥 All Cohorts</h2>
+      <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+        <button id="export-btn" class="submit-btn"> ⤓ Export CSV</button>
+       <!-- <input type="text" id="search-input"
+    placeholder="🔍 Search Cohorts"
+    class="search-box" />-->
+        <div id="pagination" class="pagination-controls"></div>
+      </div>
+      <div id="user-modal" class="modal">
+  <div class="modal-content">
+    <span id="modal-close" class="modal-close">&times;</span>
+    <h3 id="modal-title">Users in Cohort</h3>
+    <ul id="modal-user-list"></ul>
+  </div>
+</div>
+
+
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Dates</th>
+            <th>Status</th>
+            <th>Users</th>
+            <th>Created By</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="cohort-table-body">
+          <tr><td colspan="6" style="text-align:center;">⏳ Loading cohorts...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

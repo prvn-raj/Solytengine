@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Competency Manager - Solyte</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <link href="/css/user_dashboard.css" rel="stylesheet" />
+  <link href="/css/competency.css" rel="stylesheet" />
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/competency.js" defer></script>
+</head>
+<body class="dashboard-body">
+  <div class="login">
+    <img src="/assets/logo.png" alt="Solyte Logo" style="width: 120px; margin: 0 auto 20px;" />
+    <h2 style="text-align: center; color: #de4248; margin-bottom: 20px;">Competency Manager</h2>
+
+    <!-- 🔍 Search -->
+    <input type="text" id="search-input" placeholder="Search competencies..." />
+
+    <!-- 🆕 Add Form -->
+    <form id="competency-form">
+      <input type="text" id="name" placeholder="Competency Name" required />
+      <input type="text" id="category" placeholder="Category" />
+      <textarea id="description" placeholder="Description" rows="3"></textarea>
+      <button type="submit">Add</button>
+    </form>
+
+    <!-- 📋 Competency List -->
+    <table class="competency-table" style="margin-top: 20px; width: 100%;">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Description</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="competency-table-body">
+        <!-- Competencies will be dynamically injected here -->
+      </tbody>
+    </table>
+
+    <!-- 📤 Export Button -->
+    <div style="text-align: right; margin-top: 10px;">
+      <button id="export-btn" class="export-btn">Export CSV</button>
+    </div>
+  </div>
+</body>
+</html>

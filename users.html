@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manage Users - Solyte</title>
+  <link href="/css/users.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+</head>
+<body>
+  <div class="page-content dashboard-body">
+    <div class="user-container">
+      <!-- 🧍 Add User Form -->
+      <h2 class="section-title">➕ Add User</h2>
+      <form id="user-form" class="user-form">
+        <div class="form-row">
+          <label>User #</label>
+          <input type="text" id="user_id" readonly />
+        </div>
+        <div class="form-row">
+          <label>First Name *</label>
+          <input type="text" id="first_name" required />
+        </div>
+        <div class="form-row">
+          <label>Last Name *</label>
+          <input type="text" id="last_name" required />
+        </div>
+        <div class="form-row">
+          <label>Email *</label>
+          <input type="email" id="email" required />
+        </div>
+        <div class="form-row">
+          <label>Mobile</label>
+          <input type="tel" id="phone" pattern="^\d{10}$" title="10-digit mobile number" />
+        </div>
+        <div class="form-row">
+          <label>Company Name *</label>
+          <input type="text" id="company_name" required />
+        </div>
+        <div class="form-row">
+          <label>Department</label>
+          <input type="text" id="department" />
+        </div>
+        <div class="form-row">
+          <label>Designation</label>
+          <input type="text" id="designation" />
+        </div>
+        <div class="form-row">
+          <label>Employee ID</label>
+          <input type="text" id="employee_id" />
+        </div>
+        <div class="form-row">
+          <label>Date of Birth</label>
+          <input type="date" id="date_of_birth" />
+        </div>
+
+        <button type="submit" class="submit-btn">💾 Save User</button>
+      </form>
+
+      <!-- 👥 User Table -->
+      <h2 class="section-title" id="user-title">👤 All Users</h2>
+<div class="user-actions-bar">
+  <button id="export-btn" class="submit-btn"> ⤓ Export CSV</button>
+
+  <input type="text" id="search-input"
+    placeholder="🔍 Search user#, users, email, company..."
+    class="search-box" />
+
+  <div id="pagination" class="pagination-controls"></div>
+</div>
+
+
+
+      <table class="user-table">
+        <thead>
+          <tr>
+            <th>User #</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Company</th>
+            <th>Designation</th>
+            <th>Employee ID</th>
+            <th>Status</th>
+            <th>Initial Password</th>
+            <th>Created By</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="user-table-body">
+            <tr><td colspan="10" style="text-align:center;">⏳ Loading users...</td></tr>
+
+          <!-- Dynamic user rows go here -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>
