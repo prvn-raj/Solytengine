@@ -6,16 +6,16 @@
   let currentPage = 1;
   const rowsPerPage = 7;
   let sortAsc = true;
-let currentSortField = 'question_id';
+  let currentSortField = 'question_id';
 
+  let dimensionMap = {};  // dimension_id → { name, color }
+  let tendencyMap = {};   // dimension_id → [tendencies]
 
   async function initQuestionsPage() {
     await populateDimensionDropdown();
     await fetchTendencies();
     await populateNextQuestionId();
     await loadQuestions();
-    
-
 
     const form = document.getElementById("question-form");
     const addOptionBtn = document.getElementById("add-option-btn");
@@ -31,12 +31,9 @@ let currentSortField = 'question_id';
       if (currentOptions.length > 0) {
         const last = currentOptions[currentOptions.length - 1];
         const text = last.valueInput.value.trim();
-        const mapped =
-          last.competencySelect.selectedOptions.length > 0 ||
-          last.cortexSelect.selectedOptions.length > 0 ||
-          last.influencesSelect.selectedOptions.length > 0;
+        const hasAnyMapping = last.tendencySelectors.some(sel => sel.select.selectedOptions.length > 0);
 
-        if (!text || !mapped) {
+        if (!text || !hasAnyMapping) {
           alert("Please complete the last option with a value and at least one tendency before adding a new one.");
           return;
         }
@@ -86,12 +83,8 @@ let currentSortField = 'question_id';
 
       for (const opt of currentOptions) {
         const optionText = opt.valueInput.value.trim();
-        const hasTendencies =
-          opt.competencySelect.selectedOptions.length > 0 ||
-          opt.cortexSelect.selectedOptions.length > 0 ||
-          opt.influencesSelect.selectedOptions.length > 0;
-
-        if (!optionText || !hasTendencies) {
+        const hasAny = opt.tendencySelectors.some(ts => ts.select.selectedOptions.length > 0);
+        if (!optionText || !hasAny) {
           alert("Each option must have a label and be mapped to at least one tendency.");
           return;
         }
@@ -125,7 +118,6 @@ let currentSortField = 'question_id';
           return;
         }
         inserted = data;
-
         await client.from("question_option_tendencies").delete().eq("question_id", currentEditId);
         currentEditId = null;
       } else {
@@ -144,24 +136,16 @@ let currentSortField = 'question_id';
       }
 
       for (const opt of currentOptions) {
-        const { valueInput, competencySelect, cortexSelect, influencesSelect } = opt;
-
-        const optionText = valueInput.value.trim();
-        if (!optionText) continue;
-
-        const tendencies = [
-          ...Array.from(competencySelect.selectedOptions).map(o => ({ tendency_id: o.value, dimension: "Competency" })),
-          ...Array.from(cortexSelect.selectedOptions).map(o => ({ tendency_id: o.value, dimension: "Cortex" })),
-          ...Array.from(influencesSelect.selectedOptions).map(o => ({ tendency_id: o.value, dimension: "Influences" })),
-        ];
-
-        for (const map of tendencies) {
-          await client.from("question_option_tendencies").insert({
-            question_id: inserted.id,
-            option_value: optionText,
-            tendency_id: map.tendency_id,
-            dimension_id: getDimensionId(map.tendency_id),
-            weight: 1
+        const optionText = opt.valueInput.value.trim();
+        for (const { select, dimension_id } of opt.tendencySelectors) {
+          Array.from(select.selectedOptions).forEach(async o => {
+            await client.from("question_option_tendencies").insert({
+              question_id: inserted.id,
+              option_value: optionText,
+              tendency_id: o.value,
+              dimension_id,
+              weight: 1
+            });
           });
         }
       }
@@ -174,40 +158,8 @@ let currentSortField = 'question_id';
     });
   }
 
-  document.getElementById("sort-id").addEventListener("click", () => {
-  sortAsc = !sortAsc;
-  currentSortField = 'question_id';
-  sortQuestions();
-});
-
-function sortQuestions() {
-  const sorted = [...allQuestions].sort((a, b) => {
-    const valA = a[currentSortField] || "";
-    const valB = b[currentSortField] || "";
-    return sortAsc
-      ? valA.localeCompare(valB, undefined, { numeric: true })
-      : valB.localeCompare(valA, undefined, { numeric: true });
-  });
-  renderQuestionTable(sorted);
-}
-
-  async function fetchTendencies() {
-    const { data, error } = await client
-      .from("tendencies")
-      .select("id, name, dimension_id, color, is_active, dimensions(name)")
-      .eq("is_active", true);
-
-    if (error) {
-      console.error("Failed to fetch tendencies:", error);
-      return;
-    }
-
-    allTendencies = data;
-  }
-
   function addOptionBlock(type) {
     const container = document.getElementById("options-container");
-
     const block = document.createElement("div");
     block.classList.add("option-block");
 
@@ -226,13 +178,23 @@ function sortQuestions() {
     const mapping = document.createElement("div");
     mapping.classList.add("tendency-mapping");
 
-    const competencySelect = createMultiSelect("competency");
-    const cortexSelect = createMultiSelect("cortex");
-    const influencesSelect = createMultiSelect("influences");
+    const tendencySelectors = [];
+    for (const [dimId, tendencies] of Object.entries(tendencyMap)) {
+      const select = document.createElement("select");
+      select.multiple = true;
+      select.title = dimensionMap[dimId]?.name || dimId;
 
-    mapping.appendChild(competencySelect);
-    mapping.appendChild(cortexSelect);
-    mapping.appendChild(influencesSelect);
+      tendencies.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t.id;
+        opt.textContent = t.name;
+        select.appendChild(opt);
+      });
+
+      mapping.appendChild(select);
+      tendencySelectors.push({ select, dimension_id: dimId });
+    }
+
     block.appendChild(mapping);
 
     const removeBtn = document.createElement("button");
@@ -246,37 +208,26 @@ function sortQuestions() {
     block.appendChild(removeBtn);
 
     container.appendChild(block);
-    currentOptions.push({ block, valueInput, competencySelect, cortexSelect, influencesSelect });
+    currentOptions.push({ block, valueInput, tendencySelectors });
   }
 
-  function createMultiSelect(dimensionKey) {
-    const select = document.createElement("select");
-    select.multiple = true;
-    select.title = dimensionKey;
+  async function fetchTendencies() {
+    const { data: tendencies } = await client.from("tendencies").select("id, name, dimension_id, color, is_active").eq("is_active", true);
+    const { data: dimensions } = await client.from("dimensions").select("id, name, color");
 
-    const dimensionMap = {
-      competency: "Competency",
-      cortex: "Cortex",
-      influences: "Influences"
-    };
+    dimensionMap = {};
+    tendencyMap = {};
 
-    const filtered = allTendencies.filter(
-      t => t.dimensions?.name === dimensionMap[dimensionKey]
-    );
-
-    filtered.forEach(t => {
-      const opt = document.createElement("option");
-      opt.value = t.id;
-      opt.textContent = t.name;
-      select.appendChild(opt);
+    (dimensions || []).forEach(d => {
+      dimensionMap[d.id] = { name: d.name, color: d.color };
+      tendencyMap[d.id] = [];
     });
 
-    return select;
-  }
-
-  function getDimensionId(tendencyId) {
-    const tendency = allTendencies.find(t => t.id === tendencyId);
-    return tendency?.dimension_id || null;
+    (tendencies || []).forEach(t => {
+      if (tendencyMap[t.dimension_id]) {
+        tendencyMap[t.dimension_id].push(t);
+      }
+    });
   }
 
   async function populateNextQuestionId() {
@@ -311,7 +262,6 @@ function sortQuestions() {
 
     allQuestions = data;
     document.getElementById("question-title").textContent = `🧠 All Questions (${allQuestions.length})`;
-
     renderQuestionTable(allQuestions);
   }
 
@@ -338,25 +288,29 @@ function sortQuestions() {
         </td>
       `;
 
-     row.querySelector(".action-delete").onclick = async () => {
-  if (!confirm("Are you sure you want to delete this question?")) return;
+      row.querySelector(".action-view").onclick = async () => {
+        const tendencies = await getTendenciesForQuestion(q.id);
+        const modal = document.getElementById("tendency-modal");
+        const title = document.getElementById("tendency-modal-title");
+        const badgeContainer = document.getElementById("tendency-badges");
 
-  try {
-    // Step 1: delete related mappings
-    await client.from("question_option_tendencies").delete().eq("question_id", q.id);
-    await client.from("question_tendency_mappings").delete().eq("question_id", q.id);
+        title.textContent = `Tendencies for ${q.question_id}`;
+        badgeContainer.innerHTML = "";
 
-    // Step 2: delete the question
-    const { error } = await client.from("questions").delete().eq("id", q.id);
-    if (error) throw error;
+        if (tendencies.length === 0) {
+          badgeContainer.innerHTML = "<em>No tendencies found.</em>";
+        } else {
+          tendencies.forEach(t => {
+            const badge = document.createElement("span");
+            badge.className = "badge";
+            badge.style.background = t.color;
+            badge.textContent = `${t.name} (${t.dimensions.name})`;
+            badgeContainer.appendChild(badge);
+          });
+        }
 
-    await loadQuestions();
-  } catch (err) {
-    console.error("Failed to delete question:", err);
-    alert("Delete failed due to linked data or DB constraint.");
-  }
-};
-
+        modal.style.display = "block";
+      };
 
       row.querySelector(".action-edit").onclick = async () => {
         const form = document.getElementById("question-form");
@@ -371,35 +325,39 @@ function sortQuestions() {
         currentOptions = [];
       };
 
-      row.querySelector(".action-view").onclick = async () => {
-  const tendencies = await getTendenciesForQuestion(q.id);
-  const modal = document.getElementById("tendency-modal");
-  const title = document.getElementById("tendency-modal-title");
-  const badgeContainer = document.getElementById("tendency-badges");
+      row.querySelector(".action-delete").onclick = async () => {
+        if (!confirm("Are you sure you want to delete this question?")) return;
 
-  title.textContent = `Tendencies for ${q.question_id}`;
-  badgeContainer.innerHTML = "";
-
-  if (tendencies.length === 0) {
-    badgeContainer.innerHTML = "<em>No tendencies found.</em>";
-  } else {
-    tendencies.forEach(t => {
-      const badge = document.createElement("span");
-      badge.className = "badge";
-      badge.style.background = t.color;
-      badge.textContent = `${t.name} (${t.dimensions.name})`;
-      badgeContainer.appendChild(badge);
-    });
-  }
-
-  modal.style.display = "block";
-};
-
+        try {
+          await client.from("question_option_tendencies").delete().eq("question_id", q.id);
+          await client.from("question_tendency_mappings").delete().eq("question_id", q.id);
+          const { error } = await client.from("questions").delete().eq("id", q.id);
+          if (error) throw error;
+          await loadQuestions();
+        } catch (err) {
+          console.error("Failed to delete question:", err);
+          alert("Delete failed due to linked data or DB constraint.");
+        }
+      };
 
       table.appendChild(row);
     });
 
     renderPagination(dataList);
+  }
+
+  async function getTendenciesForQuestion(questionId) {
+    const { data, error } = await client
+      .from("question_option_tendencies")
+      .select("tendencies(name, dimensions(name), color)")
+      .eq("question_id", questionId);
+
+    if (error) {
+      console.error("Error loading tendencies:", error);
+      return [];
+    }
+
+    return data.map(d => d.tendencies);
   }
 
   function renderPagination(dataList) {
@@ -413,19 +371,6 @@ function sortQuestions() {
       <button ${currentPage === totalPages ? "disabled" : ""} onclick="changeQuestionPage(${currentPage + 1})">Next ❯</button>
     `;
   }
-async function getTendenciesForQuestion(questionId) {
-  const { data, error } = await client
-    .from("question_option_tendencies")
-    .select("tendencies(name, dimensions(name), color)")
-    .eq("question_id", questionId);
-
-  if (error) {
-    console.error("Error loading tendencies:", error);
-    return [];
-  }
-
-  return data.map(d => d.tendencies);
-}
 
   async function exportTableToCSV() {
     const headers = ["Question ID", "Text", "Type", "Dimension", "Difficulty", "Tendencies"];
@@ -456,43 +401,43 @@ async function getTendenciesForQuestion(questionId) {
     renderQuestionTable(allQuestions);
   };
 
+  document.getElementById("tendency-modal-close").onclick = () => {
+    document.getElementById("tendency-modal").style.display = "none";
+  };
+
+  window.onclick = (event) => {
+    const modal = document.getElementById("tendency-modal");
+    if (event.target === modal) {
+      modal.style.display = "none";
+    }
+  };
+
+  async function populateDimensionDropdown() {
+    const dropdown = document.getElementById("dimension");
+    if (!dropdown) return;
+
+    dropdown.innerHTML = `<option value="">Select Dimension</option>`;
+
+    const { data, error } = await client
+      .from("dimensions")
+      .select("name, color")
+      .order("name", { ascending: true });
+
+    if (error) {
+      console.error("Failed to fetch dimensions:", error);
+      return;
+    }
+
+    (data || []).forEach(dim => {
+      const opt = document.createElement("option");
+      opt.value = dim.name.toLowerCase();
+      opt.textContent = dim.name;
+      opt.style.backgroundColor = dim.color || "#eee";
+      opt.style.color = "#000";
+      dropdown.appendChild(opt);
+    });
+  }
+
+  window.initQuestionsPage = initQuestionsPage;
   initQuestionsPage();
 })();
-
-document.getElementById("tendency-modal-close").onclick = () => {
-  document.getElementById("tendency-modal").style.display = "none";
-};
-
-window.onclick = (event) => {
-  const modal = document.getElementById("tendency-modal");
-  if (event.target === modal) {
-    modal.style.display = "none";
-  }
-};
-
-async function populateDimensionDropdown() {
-  const dropdown = document.getElementById("dimension");
-  if (!dropdown) return;
-
-  dropdown.innerHTML = `<option value="">Select Dimension</option>`;
-
-  const { data, error } = await client
-    .from("dimensions")
-    .select("name, color")
-    .order("name", { ascending: true });
-
-  if (error) {
-    console.error("Failed to fetch dimensions:", error);
-    return;
-  }
-
-  (data || []).forEach(dim => {
-    const opt = document.createElement("option");
-    opt.value = dim.name.toLowerCase(); // to match `dimension_type`
-    opt.textContent = dim.name;
-    opt.style.backgroundColor = dim.color || "#eee";
-    opt.style.color = "#000";
-    dropdown.appendChild(opt);
-  });
-}
-

@@ -462,6 +462,6 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-
+window.initAssignmentsPage = initAssignmentsPage;
   initAssignmentsPage();
 })();

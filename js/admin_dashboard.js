@@ -107,7 +107,15 @@ document.addEventListener("DOMContentLoaded", async () => {
             initDashboard(client);
           `;
         } else {
-          script.innerHTML = `import "/js/${scriptName}";`;
+          script.innerHTML = `import "/js/${scriptName}";
+            if (typeof initQuestionsPage === 'function') initQuestionsPage();
+            if (typeof initDimensionsPage === 'function') initDimensionsPage();
+            if (typeof initTendenciesPage === 'function') initTendenciesPage();
+            if (typeof initAssessmentsPage === 'function') initAssessmentsPage();
+            if (typeof initAssignmentsPage === 'function') initAssignmentsPage();
+            if (typeof initUsersPage === 'function') initUsersPage();
+            if (typeof initCohortsPage === 'function') initCohortsPage();
+            if (typeof initReportsPage === 'function') initReportsPage();`;
         }
         document.body.appendChild(script);
       }

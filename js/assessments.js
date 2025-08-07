@@ -410,6 +410,6 @@ window.addEventListener("message", (event) => {
     currentPage = page;
     renderAssessmentsTable(allAssessments);
   };
-
+  window.initAssessmentsPage = initAssessmentsPage;
   initAssessmentsPage();
 })();

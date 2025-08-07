@@ -286,6 +286,6 @@ Proceed?`;
     link.click();
     document.body.removeChild(link);
   }
-
+window.initTendenciesPage = initTendenciesPage;
   initTendenciesPage();
 })();

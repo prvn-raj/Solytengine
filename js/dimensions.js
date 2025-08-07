@@ -1,4 +1,4 @@
-(() => {
+(async () => {
   let currentEditId = null;
   let allDimensions = [];
   let emailMap = {};
@@ -56,6 +56,7 @@
         }
 
         form.reset();
+        await populateNextDimensionId();  // ✅ force re-population
         await fetchAndDisplayDimensions();
       } catch (error) {
         console.error("❌ Submission failed:", error);
@@ -248,6 +249,9 @@ Do you want to proceed with safety check?`;
     link.click();
     document.body.removeChild(link);
   }
+  window.initDimensionsPage = initDimensionsPage;
 
-  initDimensionsPage();
+  await initDimensionsPage();
+
+
 })();

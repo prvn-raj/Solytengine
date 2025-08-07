@@ -4,6 +4,7 @@
   const completedBody = document.getElementById("completed-summary-body");
   const responseBody = document.getElementById("response-detail-body");
   const exportBtn = document.getElementById("export-btn");
+  const exportResponseBtn = document.getElementById("export-response-btn");
 
   const { data: assignments } = await client.from("assessment_assignments").select("*, assessments(name), app_users(user_id, first_name, last_name), cohorts(name), user_assessments(status)");
   renderAssignmentSummary(assignments);
@@ -15,6 +16,8 @@
     const { data: responses } = await client.from("user_response_summary").select("*");
     exportToCSV(responses);
   });
+
+  exportResponseBtn?.addEventListener("click", exportResponseDetailsToCSV);
 
   function renderAssignmentSummary(data) {
     assignmentBody.innerHTML = "";
@@ -85,6 +88,23 @@
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = "user_response_summary.csv";
+    link.click();
+  }
+
+  function exportResponseDetailsToCSV() {
+    const table = document.getElementById("response-details-table");
+    if (!table) return alert("❌ No response table found");
+
+    const rows = Array.from(table.querySelectorAll("tr"));
+    const csv = rows.map(row => {
+      const cells = Array.from(row.querySelectorAll("th, td"));
+      return cells.map(cell => `"${cell.textContent.trim()}"`).join(",");
+    }).join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "response_details.csv";
     link.click();
   }
 })();

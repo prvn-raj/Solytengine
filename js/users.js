@@ -218,6 +218,7 @@
     const field = document.getElementById("user_id");
     if (field) field.value = nextId;
   }
+window.initUsersPage = initUsersPage;
 
   initUsersPage();
 })();

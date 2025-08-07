@@ -89,3 +89,31 @@ select, input[type="text"] {
 .pagination-controls button:hover {
   background-color: #ddd;
 }
+
+#export-response-btn {
+  
+font-family: 'Lexend', sans-serif;
+  grid-column: span 1;
+  background-color: #f87d34;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+   margin-bottom: 7px;
+}
+
+#export-response-btn:hover {
+  background-color: #de4248;
+  color: white;
+  transform: translateY(-1px);
+}
+
+#export-response-btn:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+
