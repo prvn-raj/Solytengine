@@ -1,0 +1,14 @@
+/* theme.css */
+:root{
+  --bg:#fffef7;          /* Solyte white */
+  --text:#545454;        /* Solyte grey */
+  --muted:#6b6b6b;
+  --primary:#de4248;     /* primary */
+  --accent:#f87d34;      /* secondary */
+  --card:#fffef7;
+  --border:#e9e2d3;
+  --focus:#de4248;
+  --radius:16px;
+  color-scheme: light;
+  font-family: 'Lexend', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}

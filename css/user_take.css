@@ -27,7 +27,7 @@ body {
   width: 80%;
   margin: auto;
   height: 10px;
-  background: #f87d34;
+  background: #fffef7; 
   border-radius: 6px;
   overflow: hidden;
 }
@@ -35,7 +35,7 @@ body {
 #progress-bar {
   width: 0%;
   height: 100%;
-  background: #fffef7;
+  background: #f87d34;
   transition: width 0.3s ease;
 }
 
@@ -188,4 +188,18 @@ button.disabled-btn {
   background-color: #FF9800;
   color: white;
   cursor: not-allowed;
+}
+
+.nav-buttons {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.nav-buttons .spacer {
+  flex: 1;
+}
+
+.nav-buttons .secondary {
+  opacity: 0.85;
 }

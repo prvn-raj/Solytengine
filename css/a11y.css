@@ -1,0 +1,8 @@
+html, body { background: var(--bg); color: var(--text); }
+.text-scale-100 { font-size:100%; }
+.text-scale-112 { font-size:112%; }
+.text-scale-125 { font-size:125%; }
+.text-scale-150 { font-size:150%; }
+.reduced-motion * { animation: none !important; transition: none !important; }
+.dyslexia-font { font-family: 'Lexend', 'OpenDyslexic', system-ui; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }

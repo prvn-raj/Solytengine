@@ -1,4 +1,3 @@
-
 (() => {
   let userId = null;
   let appUserId = null;
@@ -9,9 +8,10 @@
     const statusMsg = document.getElementById("password-change-status");
 
     // Hide initially
-    formSection.classList.add("hidden");
-    assessmentsSection.classList.add("hidden");
+    if (formSection) formSection.classList.add("hidden");
+    if (assessmentsSection) assessmentsSection.classList.add("hidden");
 
+    // Session
     const userRes = await client.auth.getUser();
     const user = userRes.data.user;
     if (!user) {
@@ -20,6 +20,7 @@
     }
     userId = user.id;
 
+    // app_users profile
     const { data: profile, error } = await client
       .from("app_users")
       .select("id, initial_password, first_name, last_name")
@@ -27,29 +28,53 @@
       .single();
 
     if (error || !profile) {
-      statusMsg.textContent = "❌ Error loading profile.";
-      statusMsg.classList.remove("hidden");
-      statusMsg.classList.add("text-red-600");
+      if (statusMsg) {
+        statusMsg.textContent = "❌ Error loading profile.";
+        statusMsg.classList.remove("hidden");
+        statusMsg.classList.add("text-red-600");
+      }
       return;
     }
 
-    const fullName = `${profile.first_name} ${profile.last_name}`;
-    const welcomeEl = document.getElementById("welcome-user");
-    if (welcomeEl) welcomeEl.textContent = `👋 Welcome, ${fullName}`;
     appUserId = profile.id;
 
+    const fullName = `${profile.first_name || ""} ${profile.last_name || ""}`.trim();
+    const welcomeEl = document.getElementById("welcome-user");
+    if (welcomeEl) welcomeEl.textContent = fullName ? `👋 Welcome, ${fullName}` : "👋 Welcome";
+
+    // If first login (initial password present) → show change password
     if (profile.initial_password) {
-      formSection.classList.remove("hidden");
+      if (formSection) formSection.classList.remove("hidden");
     } else {
-      assessmentsSection.classList.remove("hidden");
+      if (assessmentsSection) assessmentsSection.classList.remove("hidden");
       await loadAssignedAssessments(appUserId);
     }
   }
 
+  function fmtDate(dateStr) {
+    if (!dateStr) return "N/A";
+    try {
+      const d = new Date(dateStr);
+      if (Number.isNaN(+d)) return "N/A";
+      return d.toLocaleDateString();
+    } catch {
+      return "N/A";
+    }
+  }
+
+  function isExpiredByEndDate(endDateStr) {
+    if (!endDateStr) return false;
+    const today = new Date(); today.setHours(0,0,0,0);
+    const end = new Date(endDateStr); end.setHours(0,0,0,0);
+    return end.getTime() < today.getTime();
+  }
+
   async function loadAssignedAssessments(appUserId) {
     const container = document.getElementById("assessment-list");
+    if (!container) return;
     container.innerHTML = "⏳ Loading assessments...";
 
+    // 1) user's cohort memberships
     const { data: cohortMemberships, error: cohortErr } = await client
       .from("cohort_members")
       .select("cohort_id")
@@ -61,17 +86,21 @@
       return;
     }
 
-    const cohortIds = cohortMemberships?.map((c) => c.cohort_id) || [];
+    const cohortIds = (cohortMemberships || []).map((c) => c.cohort_id);
 
-    const { data: cohortAssignments, error: cohortAssignErr } = await client
-      .from("assessment_assignments")
-      .select("*, assessments(*), cohorts(name)")
-      .in("cohort_id", cohortIds);
+    // 2) assignments (cohort + individual) with the assessment join
+    const selectFields =
+      "id, assignment_type, cohort_id, app_user_id, assessment_id, end_date, max_attempts, " +
+      "assessments(id, name, total_questions, time_limit_minutes), " +
+      "cohorts(name)";
 
-    const { data: individualAssignments, error: individualAssignErr } = await client
-      .from("assessment_assignments")
-      .select("*, assessments(*), cohorts(name)")
-      .eq("app_user_id", appUserId);
+    const [{ data: cohortAssignments, error: cohortAssignErr }, { data: individualAssignments, error: individualAssignErr }] =
+      await Promise.all([
+        cohortIds.length
+          ? client.from("assessment_assignments").select(selectFields).in("cohort_id", cohortIds)
+          : Promise.resolve({ data: [], error: null }),
+        client.from("assessment_assignments").select(selectFields).eq("app_user_id", appUserId)
+      ]);
 
     if (cohortAssignErr || individualAssignErr) {
       container.innerHTML = "❌ Failed to load assessments.";
@@ -81,38 +110,53 @@
 
     const assignments = [...(individualAssignments || []), ...(cohortAssignments || [])];
 
-    const { data: userAssessments } = await client
+    // 3) aggregate attempt statuses (latest state per assignment)
+    const { data: userAssessments, error: uaErr } = await client
       .from("user_assessments")
-      .select("assignment_id, status")
+      .select("assignment_id, status, completed_at")
       .eq("app_user_id", appUserId);
 
-    const statusMap = {};
-    const attemptCountMap = {};
+    if (uaErr) {
+      container.innerHTML = "❌ Failed to load assessment attempts.";
+      console.error(uaErr);
+      return;
+    }
 
-    userAssessments?.forEach((a) => {
-      attemptCountMap[a.assignment_id] = (attemptCountMap[a.assignment_id] || 0) + 1;
-      if (!statusMap[a.assignment_id]) {
-        statusMap[a.assignment_id] = a.status;
-      } else {
-        const current = statusMap[a.assignment_id];
-        const priority = { completed: 3, in_progress: 2, not_started: 1 };
-        if (priority[a.status] > priority[current]) {
-          statusMap[a.assignment_id] = a.status;
-        }
+    const statusPriority = { not_started: 1, in_progress: 2, completed: 3 };
+    const statusMap = {};
+    const completedCountMap = {};
+    const inProgressMap = {};
+    const startedCountMap = {}; // ✅ new: counts in_progress + completed
+
+    (userAssessments || []).forEach((ua) => {
+      // track a single, most-advanced status per assignment
+      const prev = statusMap[ua.assignment_id] || "not_started";
+      if (statusPriority[ua.status] >= statusPriority[prev]) {
+        statusMap[ua.assignment_id] = ua.status;
+      }
+      if (ua.status === "completed") {
+        completedCountMap[ua.assignment_id] = (completedCountMap[ua.assignment_id] || 0) + 1;
+      }
+      if (ua.status === "in_progress") {
+        inProgressMap[ua.assignment_id] = true;
+      }
+      // ✅ count started attempts (in_progress + completed)
+      if (ua.status === "in_progress" || ua.status === "completed") {
+        startedCountMap[ua.assignment_id] = (startedCountMap[ua.assignment_id] || 0) + 1;
       }
     });
 
+    // 4) render
     container.innerHTML = "";
     if (assignments.length === 0) {
       container.innerHTML = `<p class="info">❌ No assessments available.</p>`;
       return;
     }
 
+    // group by Individual / Cohort
     const grouped = {};
     for (const a of assignments) {
-      const key = a.assignment_type === "cohort"
-        ? `Cohort: ${a.cohorts?.name || "Unnamed"}`
-        : "Individual";
+      const key = a.assignment_type === "cohort" ? `Cohort: ${a.cohorts?.name || "Unnamed"}` : "Individual";
       if (!grouped[key]) grouped[key] = [];
       grouped[key].push(a);
     }
@@ -132,15 +176,26 @@
         const info = document.createElement("div");
         info.className = "assessment-info";
 
-        const title = assignment.assessments?.name || "Untitled Assessment";
-        const totalQuestions = assignment.assessments?.total_questions ?? "?";
+        const asmt = assignment.assessments || {};
+        const title = asmt.name || "Untitled Assessment";
+        const totalQuestions = asmt.total_questions ?? "—";
+
+        // ✅ TIME LIMIT: show from joined assessments row
+        const timeLimitMinutes = Number.isFinite(asmt.time_limit_minutes) ? asmt.time_limit_minutes : null;
+        const timeLimitLabel = timeLimitMinutes && timeLimitMinutes > 0 ? `${timeLimitMinutes} mins` : "No limit";
+
         const status = statusMap[assignment.id] || "not_started";
-        const attemptsUsed = attemptCountMap[assignment.id] || 0;
-        const maxAttempts = assignment.max_attempts ?? "∞";
+        const isCompleted = status === "completed";
+
+        // ✅ attempts used = started attempts (in_progress + completed)
+        const attemptsUsed = startedCountMap[assignment.id] || 0;
+        const maxAttempts = Number.isFinite(assignment.max_attempts) ? assignment.max_attempts : 1;
+
+        const expired = isExpiredByEndDate(assignment.end_date);
 
         let badgeClass = "status-not-started";
         if (status === "in_progress") badgeClass = "status-in-progress";
-        if (status === "completed") badgeClass = "status-completed";
+        if (isCompleted) badgeClass = "status-completed";
 
         info.innerHTML = `
           <h4>
@@ -152,56 +207,61 @@
           <p>
             🧪 Attempts: ${attemptsUsed} / ${maxAttempts} |
             ❓ Questions: ${totalQuestions} |
-            📅 Due: ${assignment.end_date ?? "N/A"} |
-            ⏱ Time Limit: ${assignment.time_limit_minutes ? `${assignment.time_limit_minutes} mins` : "N/A"}
+            📅 Due: ${fmtDate(assignment.end_date)} |
+            ⏱ Time Limit: ${timeLimitLabel}
           </p>
         `;
 
         const btn = document.createElement("button");
         btn.className = "start-btn";
-        btn.textContent = status === "in_progress" ? "▶️ Resume" : "🚀 Start";
 
-        const noAttemptsLeft = maxAttempts !== "∞" && attemptsUsed >= maxAttempts;
-        const isCompleted = status === "completed";
-        const isExpired = assignment.end_date && new Date(assignment.end_date) < new Date().setHours(0, 0, 0, 0);
-
+        // button state rules
         if (isCompleted) {
           btn.disabled = true;
           btn.textContent = "✅ Completed";
           btn.classList.add("disabled-btn");
           btn.setAttribute("data-tooltip", "You have already completed this assessment.");
-        } else if (noAttemptsLeft) {
-          btn.disabled = true;
-          btn.textContent = "🚫 No Attempts";
-          btn.classList.add("disabled-btn");
-          btn.setAttribute("data-tooltip", "No attempts left for this assessment.");
-        } else if (isExpired) {
+        } else if (expired) {
           btn.disabled = true;
           btn.textContent = "⌛ Expired";
           btn.classList.add("disabled-btn");
           btn.setAttribute("data-tooltip", "This assessment has expired.");
-        } else {
+        } else if (maxAttempts && attemptsUsed >= maxAttempts) { // ✅ use started attempts
+          btn.disabled = true;
+          btn.textContent = "🚫 No Attempts";
+          btn.classList.add("disabled-btn");
+          btn.setAttribute("data-tooltip", "No attempts left for this assessment.");
+        } else if (status === "in_progress") {
+          btn.textContent = "▶️ Resume";
           btn.onclick = async () => {
-            const { count } = await client
+            // find latest in-progress UA to deep-link directly to Take
+            const { data: ua } = await client
               .from("user_assessments")
-              .select("*", { count: "exact", head: true })
+              .select("id")
               .eq("assignment_id", assignment.id)
-              .eq("app_user_id", appUserId);
+              .eq("app_user_id", appUserId)
+              .eq("status", "in_progress")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
 
-            const { data: assignmentMeta } = await client
-              .from("assessment_assignments")
-              .select("max_attempts")
-              .eq("id", assignment.id)
-              .single();
+            const target = ua?.id
+              ? `user_take.html?assignment_id=${encodeURIComponent(assignment.id)}&user_assessment_id=${encodeURIComponent(ua.id)}`
+              : `assessment_prep.html?assignment_id=${encodeURIComponent(assignment.id)}`;
 
-            const max = assignmentMeta?.max_attempts ?? 1;
-
-            if (count >= max) {
+            window.location.href = target;
+          };
+        } else {
+          btn.textContent = "🚀 Start";
+          btn.onclick = async () => {
+            // ✅ pre-check: gate using started attempts for perfect cohesion
+            const started = startedCountMap[assignment.id] || 0;
+            const max = Number.isFinite(assignment.max_attempts) ? assignment.max_attempts : 1;
+            if (max && started >= max) {
               alert("❌ No attempts left for this assessment.");
               return;
             }
-
-            window.location.href = `user_take.html?assignment_id=${assignment.id}`;
+            window.location.href = `assessment_prep.html?assignment_id=${encodeURIComponent(assignment.id)}`;
           };
         }
 
@@ -214,6 +274,7 @@
     }
   }
 
+  // password change flow
   document.getElementById("change-password-form")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     const newPassword = document.getElementById("new-password").value;
@@ -228,10 +289,7 @@
     }
 
     const user = (await client.auth.getUser()).data.user;
-    await client
-      .from("app_users")
-      .update({ initial_password: null })
-      .eq("supabase_user_id", user.id);
+    await client.from("app_users").update({ initial_password: null }).eq("supabase_user_id", user.id);
 
     statusMsg.textContent = "✅ Password updated. Redirecting to login...";
     statusMsg.classList.remove("text-red-600");
@@ -244,6 +302,7 @@
     }, 2000);
   });
 
+  // sidebar nav
   document.querySelectorAll(".sidebar .nav a").forEach((link) => {
     link.addEventListener("click", async (e) => {
       e.preventDefault();
@@ -304,14 +363,13 @@
           container.innerHTML = `<p style="color: red;">Failed to load profile page.</p>`;
           console.error(err);
         }
+      } else if (section === "reports") {
+        alert("📢 Reachout to Admin!");
       }
-      else if (section === "reports") {
-  alert("📢 Reachout to Admin!");
-}
-
     });
   });
 
+  // logout
   document.getElementById("logout-btn")?.addEventListener("click", async () => {
     const { error } = await client.auth.signOut();
     if (!error) window.location.href = "index.html";

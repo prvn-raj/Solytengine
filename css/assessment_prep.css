@@ -1,0 +1,166 @@
+/* assessment_prep.css */
+
+/* Layout */
+.prep-container{
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.prep-header{
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 5;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.prep-section{
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 120px); /* header + padding */
+}
+
+/* Sticky nav row — consistent position each step */
+.nav-row{
+  margin-top: auto;
+  display:flex; justify-content:space-between; gap:12px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg);                   /* fallback */
+  background: color-mix(in srgb, var(--bg) 92%, white 8%);
+  position: sticky; bottom: 0; z-index: 10;
+  box-shadow: 0 -6px 16px rgba(0,0,0,.06);
+  backdrop-filter: blur(6px);
+}
+
+/* Typography & page colors (from theme.css tokens) */
+body{
+  font-family: 'Lexend', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+}
+
+/* Headings */
+.section-title{ font-size: 1.8rem; font-weight: 600; color: var(--primary); }
+.section-subtitle{ font-size: 1.4rem; font-weight: 500; color: var(--accent); }
+
+/* Cards (polished) */
+.prep-card{
+  background: #fffefcf2;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  margin-top: 1rem;
+  box-shadow: 0 6px 18px rgba(0,0,0,.04);
+}
+
+/* Buttons: uniform + rounded */
+button,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+input,
+select,
+textarea{
+  font-family: 'Lexend', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  font-weight: 500;
+  border-radius: 16px;
+}
+button,
+.btn-primary,
+.btn-secondary,
+.btn-ghost{
+  min-width: 120px;
+  height: 40px;
+  padding: 0 20px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Primary */
+.btn-primary{ background: var(--primary); color: #fff; border: none; }
+.btn-primary:hover{ filter: brightness(0.95); }
+
+/* Secondary */
+.btn-secondary{ background: var(--accent); color: #fff; border: none; }
+.btn-secondary:hover{ filter: brightness(0.95); }
+
+/* Ghost */
+.btn-ghost{ border: 1px solid var(--primary); color: var(--primary); background: transparent; }
+.btn-ghost:hover{ background: var(--primary); color: #fff; }
+
+/* Status & grids */
+.prep-status{ font-weight: 500; color: var(--text); opacity: .7; }
+.badge-grid{ display: grid; gap: .5rem; margin-top: 1rem; }
+.env-grid{ display: grid; gap: 1rem; margin-top: 1rem; }
+.a11y-row{ display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; }
+.switch{ display: flex; align-items: center; gap: .5rem; }
+.swatch-row{ display: flex; gap: .75rem; margin-bottom: 1rem; }
+.swatch{ width: 40px; height: 40px; border-radius: 50%; cursor: pointer; border: 2px solid var(--border); }
+
+/* Linear progress */
+.prep-progress{ height: 6px; background: #eee3; border-radius: 8px; overflow:hidden; margin: 6px 0 16px; }
+.prep-progress > .bar{ height:100%; width:0%; background: linear-gradient(90deg, var(--accent), var(--primary)); transition: width .35s ease; }
+
+/* Tips / callouts */
+.tip, .callout{ margin-top:10px; border-radius: 12px; padding:10px 12px; font-size: 14px; }
+.tip{ background: color-mix(in srgb, var(--accent) 8%, white 92%); border: 1px dashed color-mix(in srgb, var(--accent) 35%, white 65%); }
+.callout{ background: color-mix(in srgb, var(--primary) 8%, white 92%); border: 1px solid color-mix(in srgb, var(--primary) 35%, white 65%); }
+
+/* Eligibility badges (with dots) */
+.badge-grid{ display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); }
+.badge{
+  border:1px solid var(--border); border-radius: 12px; padding: 10px 12px;
+  display:flex; align-items:center; gap:10px; background:#fffefc;
+}
+.badge.ok   { border-color: #35a85344; }
+.badge.block{ border-color: #de424844; }
+.badge .dot { width:10px; height:10px; border-radius:50%; background:#bbb; }
+.badge.ok .dot{ background:#35a853; }
+.badge.block .dot{ background:#de4248; }
+
+/* Form controls */
+select, input[type="range"]{
+  border:1px solid var(--border); background:white;
+  height: 40px; border-radius: 12px; padding: 0 10px;
+}
+input[type="range"]{ height:auto; }
+
+/* Swatches */
+.swatch{ border:2px solid var(--border); box-shadow: inset 0 0 0 2px #fff; }
+.swatch:focus-visible{ outline:2px solid var(--primary); outline-offset:2px; }
+
+/* Button feedback */
+button,.btn-primary,.btn-secondary,.btn-ghost{
+  box-shadow: 0 2px 0 rgba(0,0,0,.05);
+  transition: transform .06s ease, filter .2s ease, box-shadow .2s ease;
+}
+button:active{ transform: translateY(1px); box-shadow: 0 1px 0 rgba(0,0,0,.05); }
+
+/* Helper classes */
+.hint{ color: var(--text); opacity: .75; font-size: 14px; margin-top: 8px; }
+.hidden{ display: none !important; }
+
+/* Reduced motion support */
+.reduced-motion *{ transition: none !important; animation: none !important; }
+
+/* disabled button */
+.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+ hr {
+    border: none;           /* remove default styling */
+    border-top: 2px solid #999;  /* line thickness and color */
+    width: 100%;             /* line length */
+    margin: 1.5rem auto;    /* space and centering */
+  }
