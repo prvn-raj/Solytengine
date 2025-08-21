@@ -25,89 +25,152 @@
       </div>
     </header>
 
-    <!-- A: Brief & Consent -->
-    <section id="prep-brief-consent" class="prep-section hidden">
-      <h3 class="section-subtitle">Overview & Consent</h3>
-      <div class="prep-card">
-        <div id="brief-content"><!-- populated by JS --></div>
-        <div class="consent-row">
-          <label class="checkbox">
-            <input type="checkbox" id="consent-checkbox"/>
-            <span>I have read and agree to the consent notice.</span>
-          </label>
-          <hr>
-          <div class="user-actions-bar">
-            <button id="download-consent" class="btn-secondary">Download Consent Agreement</button>
-          </div>
-        </div>
+    <!-- A: Brief & Consent -->  
+<section id="prep-brief-consent" class="prep-section hidden">
+  <h3 class="section-subtitle">Overview & Consent</h3>
+  <div class="prep-card">
+    <div id="brief-content" class="overview-card">
+      <!-- JS will populate this -->
+      <!-- Example structure rendered by JS:
+      <div class="qa-row">
+        <span class="qa-label">📌 Title</span>
+        <span class="qa-value">Ownership</span>
       </div>
-      <div class="nav-row">
-        <button class="btn-primary" id="to-eligibility" disabled>Continue</button>
-      </div>
-    </section>
+      -->
+    </div>
 
-    <!-- B: Eligibility -->
-    <section id="prep-eligibility" class="prep-section hidden">
-      <h3 class="section-subtitle">Eligibility Check</h3>
-      <div id="eligibility-badges" class="badge-grid"></div>
-      <div class="nav-row">
-        <button class="btn-ghost" data-back="prep-brief-consent">Back</button>
-        <button class="btn-primary" id="to-environment">Continue</button>
-      </div>
-    </section>
+    <hr>
+    <div class="user-actions-bar">
+      <button id="download-consent" class="btn-secondary">
+        📄 Download Consent Agreement
+      </button>
+    </div>
+    <br> 
+    <div class="consent-row">
+      <label class="checkbox">
+        <input type="checkbox" id="consent-checkbox"/>
+        <span>I understand how my data will be used and protected, and I give my informed consent in line with the agreement provided.</span>
+      </label>
+    </div>
+  </div>
 
-    <!-- C: Environment -->
-    <section id="prep-environment" class="prep-section hidden">
-      <h3 class="section-subtitle">Environment & Device</h3>
-      <div id="env-results" class="env-grid"></div>
-      <p class="tip">Pro tip: Enable Do Not Disturb and go full-screen for best focus. You can pause within the allowed window.</p>
-      <div class="nav-row">
-        <button class="btn-ghost" data-back="prep-eligibility">Back</button>
-        <button class="btn-primary" id="to-mood">Continue</button>
-      </div>
-    </section>
+  <div class="nav-row">
+    <button class="btn-primary" id="to-eligibility" disabled>Continue</button>
+  </div>
+</section>
 
-    <!-- D: Mood (optional) -->
-    <section id="prep-mood" class="prep-section hidden">
-      <h3 class="section-subtitle">How are you feeling?</h3>
-      <form id="mood-form" class="form-grid">
-        <label>Current mood
-          <select name="affect">
-            <option value="na">Prefer not to say</option>
-            <option value="calm">Calm</option>
-            <option value="neutral" selected>Neutral</option>
-            <option value="stressed">Stressed</option>
-          </select>
-        </label>
-        <label>Sleep last night
-          <select name="sleep">
-            <option value="na">Prefer not to say</option>
-            <option value="good">Good</option>
-            <option value="ok" selected>Okay</option>
-            <option value="poor">Poor</option>
-          </select>
-        </label>
-        <label>Distractions now
-          <select name="distraction">
-            <option value="na">Prefer not to say</option>
-            <option value="low">Low</option>
-            <option value="mod" selected>Moderate</option>
-            <option value="high">High</option>
-          </select>
-        </label>
-      </form>
-      <p class="callout">This never affects scoring; it only helps us interpret results.</p>
-      <div class="nav-row">
-        <button class="btn-ghost" data-back="prep-environment">Back</button>
-        <button class="btn-primary" id="to-a11y">Continue</button>
-      </div>
-    </section>
 
-    <!-- E: Theme & Accessibility -->
-    <section id="prep-a11y-theme" class="prep-section hidden">
-      <h3 class="section-subtitle">Make it comfortable</h3>
+
+<!-- B: Eligibility -->
+<section id="prep-eligibility" class="prep-section hidden">
+  <h3 class="section-subtitle">Are You Human?</h3>
+  <div class="prep-card">
+    <div id="eligibility-badges" class="eligibility-check">
+      <!-- Emoji equation will be injected by JS -->
+    </div>
+  </div>
+  <div class="nav-row">
+    <button class="btn-ghost" data-back="prep-brief-consent">Back</button>
+    <button class="btn-primary" id="to-environment" disabled>Continue</button>
+  </div>
+</section>
+
+ <!-- C: Environment -->
+<section id="prep-environment" class="prep-section hidden">
+  <h3 class="section-subtitle">Environment & Device</h3>
+  <span id="readiness-label" class="readiness-badge"></span>
+  <div class="prep-card">
+
+    <!-- Dynamic results -->
+    <div id="env-results" class="badge-grid">
+      <!-- JS will inject badges like below:
+      <div class="env-badge good">
+        <strong>Connectivity:</strong> 🟢 Online (~12ms)
+        <small class="env-msg">Connection stable</small>
+      </div>
+      <div class="env-badge warn">
+        <strong>Screen:</strong> 🟡 920px wide
+        <small class="env-msg">Works, but larger screen preferred</small>
+      </div>
+      <div class="env-badge bad">
+        <strong>Battery:</strong> 🔴 15%
+        <small class="env-msg">Low battery — please charge before continuing</small>
+      </div>
+      -->
+    </div>
+
+      <p class="tip">💡 Pro tip: Enable Do Not Disturb and go full-screen for best focus.</p>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-ghost" data-back="prep-eligibility">Back</button>
+    <button class="btn-primary" id="to-mood">Continue</button>
+  </div>
+</section>
+
+
+<!-- D: Mood (optional) -->
+<!-- D: Mood (optional) -->
+<section id="prep-mood" class="prep-section hidden">
+  <h3 class="section-subtitle">How are you feeling?</h3>
+
+  <div class="prep-card mood-grid">
+    <div class="mood-field">
+      <label>Current mood</label>
+      <div class="mood-options" id="mood-options">
+        <button type="button" class="mood-btn" data-value="happy" title="Positive + High energy">😀 Happy</button>
+        <button type="button" class="mood-btn" data-value="calm" title="Positive + Low energy">🙂 Calm</button>
+        <button type="button" class="mood-btn" data-value="neutral" title="Middle ground">😐 Neutral</button>
+        <button type="button" class="mood-btn" data-value="tired" title="Negative + Low energy">😔 Tired</button>
+        <button type="button" class="mood-btn" data-value="sleepy" title="Very low energy">😴 Sleepy</button>
+        <button type="button" class="mood-btn" data-value="stressed" title="Negative + High energy">😟 Stressed</button>
+      </div>
+    </div>
+
+    <div class="mood-field">
+      <label>Sleep last night</label>
+      <select name="sleep" id="mood-sleep">
+        <option value="">-- Select --</option>
+        <option value="great">Great</option>
+        <option value="okay">Okay</option>
+        <option value="poor">Poor</option>
+      </select>
+    </div>
+
+    <div class="mood-field">
+      <label>Distractions now</label>
+      <select name="distraction" id="mood-distraction">
+        <option value="">-- Select --</option>
+        <option value="none">None</option>
+        <option value="low">Low</option>
+        <option value="moderate">Moderate</option>
+        <option value="high">High</option>
+      </select>
+    </div>
+  </div>
+
+  <p class="note">ℹ️ This info doesn’t affect scoring, only helps us interpret results.</p>
+
+  <div class="nav-row">
+    <button class="btn-ghost" data-back="prep-environment">Back</button>
+    <button class="btn-primary" id="to-a11y" disabled>Continue</button>
+  </div>
+</section>
+
+
+<!-- E: Theme & Accessibility -->
+<section id="prep-a11y-theme" class="prep-section hidden">
+  <h3 class="section-subtitle">Make it comfortable</h3>
+  <div class="prep-card">
+
+    <!-- Dummy content only -->
+    <p class="note">
+      ⚡ Preferences-based assessment experience is coming soon. Your selections here won’t affect this session yet.
+    </p>
+
+    <!-- (Optional: keep the controls visible but disabled) -->
+    <fieldset disabled>
       <div class="swatch-row" id="theme-swatches"><!-- JS renders swatches --></div>
-
       <div class="a11y-row">
         <label>Text size
           <input type="range" id="text-scale" min="100" max="150" step="12" value="112">
@@ -124,26 +187,33 @@
           <input type="checkbox" id="dyslexia-font"/>
           <span>Dyslexia-friendly font</span>
         </label>
-        <button id="use-last-settings" class="btn-secondary">Use my last settings</button>
+        <div class="user-actions-bar">
+          <button id="use-last-settings" class="btn-secondary" disabled>Use my last settings</button>
+        </div>
       </div>
-      <p class="tip">Pick what’s comfortable. We’ll remember this for next time.</p>
+    </fieldset>
 
-      <div class="nav-row">
-        <button class="btn-ghost" data-back="prep-mood">Back</button>
-        <button class="btn-primary" id="to-readiness">Continue</button>
-      </div>
-    </section>
+  </div>
+
+  <div class="nav-row">
+    <button class="btn-ghost" data-back="prep-mood">Back</button>
+    <button class="btn-primary" id="to-readiness">Continue</button>
+  </div>
+</section>
+
 
     <!-- F: Readiness -->
     <section id="prep-readiness" class="prep-section hidden">
       <h3 class="section-subtitle">You’re all set?</h3>
-      <ul class="checklist">
-        <li><input type="checkbox" checked disabled> Consent provided</li>
-        <li><input type="checkbox" id="chk-eligibility" checked disabled> Eligibility passed</li>
-        <li><input type="checkbox" id="chk-env" checked disabled> Environment checked</li>
-        <li><input type="checkbox" id="chk-a11y" checked disabled> Preferences applied</li>
-      </ul>
-      <p class="callout">You can come back from where you left off if you need a break.</p>
+      <div class="prep-card">
+        <ul class="checklist">
+          <li><input type="checkbox" checked disabled> Consent provided</li>
+          <li><input type="checkbox" id="chk-eligibility" checked disabled> Eligibility passed</li>
+          <li><input type="checkbox" id="chk-env" checked disabled> Environment checked</li>
+          <li><input type="checkbox" id="chk-a11y" checked disabled> Preferences applied</li>
+        </ul>
+        <p class="callout">✅ You can come back from where you left off if you need a break.</p>
+      </div>
       <div class="nav-row">
         <button class="btn-ghost" data-back="prep-a11y-theme">Back</button>
         <button class="btn-primary" id="start-assessment">Start assessment</button>
@@ -154,9 +224,9 @@
   <!-- Scripts -->
   <script src="/js/services/assignments_api.js?v=2"></script>
   <script src="/js/services/user_assessments_api.js"></script>
-  <script src="/js/utils/env_check.js"></script>
+<script src="/js/utils/env_check.js"></script>
   <script src="/js/utils/accessibility.js"></script>
-  <script src="/js/utils/mood.js"></script>
+
   <script src="/js/assessment_prep.js"></script>
 </body>
 </html>

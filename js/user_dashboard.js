@@ -110,10 +110,10 @@
 
     const assignments = [...(individualAssignments || []), ...(cohortAssignments || [])];
 
-    // 3) aggregate attempt statuses (latest state per assignment)
+    // 3) aggregate attempts + latest status per assignment
     const { data: userAssessments, error: uaErr } = await client
       .from("user_assessments")
-      .select("assignment_id, status, completed_at")
+      .select("assignment_id, status, completed_at, current_question_index, created_at, updated_at")
       .eq("app_user_id", appUserId);
 
     if (uaErr) {
@@ -125,24 +125,28 @@
     const statusPriority = { not_started: 1, in_progress: 2, completed: 3 };
     const statusMap = {};
     const completedCountMap = {};
-    const inProgressMap = {};
-    const startedCountMap = {}; // ✅ new: counts in_progress + completed
+    const startedCountMap = {}; // in_progress + completed
+    const latestByAssignment = {}; // keep the latest UA row (by updated_at, fallback created_at)
 
     (userAssessments || []).forEach((ua) => {
-      // track a single, most-advanced status per assignment
-      const prev = statusMap[ua.assignment_id] || "not_started";
-      if (statusPriority[ua.status] >= statusPriority[prev]) {
-        statusMap[ua.assignment_id] = ua.status;
+      // count started attempts
+      if (ua.status === "in_progress" || ua.status === "completed") {
+        startedCountMap[ua.assignment_id] = (startedCountMap[ua.assignment_id] || 0) + 1;
       }
       if (ua.status === "completed") {
         completedCountMap[ua.assignment_id] = (completedCountMap[ua.assignment_id] || 0) + 1;
       }
-      if (ua.status === "in_progress") {
-        inProgressMap[ua.assignment_id] = true;
+      // most-advanced status
+      const prev = statusMap[ua.assignment_id] || "not_started";
+      if (statusPriority[ua.status] >= statusPriority[prev]) {
+        statusMap[ua.assignment_id] = ua.status;
       }
-      // ✅ count started attempts (in_progress + completed)
-      if (ua.status === "in_progress" || ua.status === "completed") {
-        startedCountMap[ua.assignment_id] = (startedCountMap[ua.assignment_id] || 0) + 1;
+      // track latest row
+      const prevLatest = latestByAssignment[ua.assignment_id];
+      const curTs = new Date(ua.updated_at || ua.created_at || 0).getTime();
+      const prevTs = prevLatest ? new Date(prevLatest.updated_at || prevLatest.created_at || 0).getTime() : -1;
+      if (!prevLatest || curTs >= prevTs) {
+        latestByAssignment[ua.assignment_id] = ua;
       }
     });
 
@@ -180,28 +184,44 @@
         const title = asmt.name || "Untitled Assessment";
         const totalQuestions = asmt.total_questions ?? "—";
 
-        // ✅ TIME LIMIT: show from joined assessments row
+        // TIME LIMIT: from joined assessments row
         const timeLimitMinutes = Number.isFinite(asmt.time_limit_minutes) ? asmt.time_limit_minutes : null;
         const timeLimitLabel = timeLimitMinutes && timeLimitMinutes > 0 ? `${timeLimitMinutes} mins` : "No limit";
 
         const status = statusMap[assignment.id] || "not_started";
-        const isCompleted = status === "completed";
-
-        // ✅ attempts used = started attempts (in_progress + completed)
+        const latest = latestByAssignment[assignment.id];
         const attemptsUsed = startedCountMap[assignment.id] || 0;
         const maxAttempts = Number.isFinite(assignment.max_attempts) ? assignment.max_attempts : 1;
-
         const expired = isExpiredByEndDate(assignment.end_date);
 
+        // ---- Minimal change: compute a display label that treats “graceful exit” as EXITED
+        let displayStatus = status;
+        if (status === "completed" && latest) {
+          const latestIdx = typeof latest.current_question_index === "number" ? latest.current_question_index : null;
+          const tq = Number.isFinite(asmt.total_questions) ? asmt.total_questions : null;
+          // If user didn't reach the end, and they still have attempts left -> show "exited"
+          if (tq !== null && latestIdx !== null && latestIdx < tq && attemptsUsed < (maxAttempts || 1)) {
+            displayStatus = "exited";
+          }
+        }
+        if (displayStatus === "exited") {
+  displayStatus = "in progress";
+}
+ if (attemptsUsed >= maxAttempts) {
+    displayStatus = "attempts_exhausted";
+  }
         let badgeClass = "status-not-started";
-        if (status === "in_progress") badgeClass = "status-in-progress";
-        if (isCompleted) badgeClass = "status-completed";
+        if (displayStatus === "in progress") badgeClass = "status-in-progress";
+        if (displayStatus === "completed") badgeClass = "status-completed";
+        if (displayStatus === "attempts_exhausted") badgeClass = "status-exhausted";
+        //if (displayStatus === "exited") badgeClass = "status-in-progress"; // style like in-progress for visibility
 
+        // render
         info.innerHTML = `
           <h4>
             ${title}
             <span class="status-badge ${badgeClass}">
-              ${status.replace("_", " ")}
+              ${displayStatus.replace("_", " ")}
             </span>
           </h4>
           <p>
@@ -215,23 +235,18 @@
         const btn = document.createElement("button");
         btn.className = "start-btn";
 
-        // button state rules
-        if (isCompleted) {
-          btn.disabled = true;
-          btn.textContent = "✅ Completed";
-          btn.classList.add("disabled-btn");
-          btn.setAttribute("data-tooltip", "You have already completed this assessment.");
-        } else if (expired) {
+        // button state rules (unchanged except we don't disable on completed if attempts remain)
+        if (expired) {
           btn.disabled = true;
           btn.textContent = "⌛ Expired";
           btn.classList.add("disabled-btn");
           btn.setAttribute("data-tooltip", "This assessment has expired.");
-        } else if (maxAttempts && attemptsUsed >= maxAttempts) { // ✅ use started attempts
+        } else if (maxAttempts && attemptsUsed >= maxAttempts) {
           btn.disabled = true;
           btn.textContent = "🚫 No Attempts";
           btn.classList.add("disabled-btn");
           btn.setAttribute("data-tooltip", "No attempts left for this assessment.");
-        } else if (status === "in_progress") {
+        } else if ((statusMap[assignment.id] || "not_started") === "in_progress") {
           btn.textContent = "▶️ Resume";
           btn.onclick = async () => {
             // find latest in-progress UA to deep-link directly to Take
@@ -254,8 +269,7 @@
         } else {
           btn.textContent = "🚀 Start";
           btn.onclick = async () => {
-            // ✅ pre-check: gate using started attempts for perfect cohesion
-            const started = startedCountMap[assignment.id] || 0;
+            const started = attemptsUsed;
             const max = Number.isFinite(assignment.max_attempts) ? assignment.max_attempts : 1;
             if (max && started >= max) {
               alert("❌ No attempts left for this assessment.");
@@ -360,7 +374,8 @@
           script.onload = () => console.log("✅ Profile script loaded and executed");
           document.body.appendChild(script);
         } catch (err) {
-          container.innerHTML = `<p style="color: red;">Failed to load profile page.</p>`;
+          const container = document.getElementById("user-dashboard-content");
+          if (container) container.innerHTML = `<p style="color: red;">Failed to load profile page.</p>`;
           console.error(err);
         }
       } else if (section === "reports") {
