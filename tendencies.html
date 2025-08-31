@@ -67,20 +67,20 @@
 
       <div id="tendency-list">
         <table class="user-table">
-          <thead>
-            <tr>    
-              <th>Tendency ID</th>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Dimension</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="tendency-table-body">
-            <tr><td colspan="6" style="text-align:center;">⏳ Loading...</td></tr>
-          </tbody>
-        </table>
+  <thead>
+    <tr>
+      <th class="sortable" onclick="sortTendencyBy('tendency_id')">ID</th>
+      <th class="sortable" onclick="sortTendencyBy('name')">Name</th>
+      <th>Description</th>
+      <th class="sortable" onclick="sortTendencyBy('dimension')">Dimension</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody id="tendency-table-body">
+<tr><td colspan="6" style="text-align:center;">⏳ Loading...</td></tr>
+</tbody>
+</table>
       </div>
     </div>
   </div>

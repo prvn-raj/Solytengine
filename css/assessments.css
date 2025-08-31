@@ -415,3 +415,13 @@ body.dashboard-body {
   color: #e9890c;
   font-style: italic;
 }
+
+.accordion-header::after {
+  content: "▶";   /* collapsed arrow */
+  float: right;
+  transition: transform 0.2s ease;
+}
+
+.accordion-header.open::after {
+  content: "▼";   /* expanded arrow */
+}

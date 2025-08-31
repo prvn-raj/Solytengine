@@ -6,6 +6,10 @@
   let currentPage = 1;
   const rowsPerPage = 10;
 
+  // 🔑 Sorting state
+  let sortAsc = true;
+  let currentSortField = "tendency_id";
+
   async function initTendenciesPage() {
     const form = document.getElementById("tendency-form");
     const exportBtn = document.getElementById("export-btn");
@@ -59,11 +63,19 @@
     if (searchInput) {
       searchInput.addEventListener("input", () => {
         const keyword = searchInput.value.trim().toLowerCase();
-        const filtered = allTendencies.filter(t =>
-          t.name.toLowerCase().includes(keyword) ||
-          (t.description || "").toLowerCase().includes(keyword)
-        );
-        renderTendencyTable(filtered);
+
+        if (keyword === "") {
+          // 🔄 Reset to full list with pagination
+          currentPage = 1;
+          renderTendencyTable(allTendencies, false);
+        } else {
+          const filtered = allTendencies.filter(t =>
+            t.name.toLowerCase().includes(keyword) ||
+            (t.description || "").toLowerCase().includes(keyword)
+          );
+          // 🔍 Show all matches, disable pagination
+          renderTendencyTable(filtered, true);
+        }
       });
     }
 
@@ -173,19 +185,58 @@
     renderTendencyTable(allTendencies);
   }
 
-  function renderTendencyTable(list) {
+  // 🆕 Sorting helper
+  function sortTendencies(dataList) {
+    return [...dataList].sort((a, b) => {
+      let valA, valB;
+
+      if (currentSortField === "dimension") {
+        valA = dimensionMap[a.dimension_id] || "";
+        valB = dimensionMap[b.dimension_id] || "";
+      } else {
+        valA = a[currentSortField] || "";
+        valB = b[currentSortField] || "";
+      }
+
+      if (typeof valA === "string") valA = valA.toLowerCase();
+      if (typeof valB === "string") valB = valB.toLowerCase();
+
+      if (valA < valB) return sortAsc ? -1 : 1;
+      if (valA > valB) return sortAsc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  window.sortTendencyBy = (field) => {
+    if (currentSortField === field) {
+      sortAsc = !sortAsc; // toggle direction
+    } else {
+      currentSortField = field;
+      sortAsc = true;
+    }
+    renderTendencyTable(allTendencies);
+  };
+
+  function renderTendencyTable(list, disablePagination = false) {
     const tbody = document.getElementById("tendency-table-body");
     tbody.innerHTML = "";
 
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    const pageItems = list.slice(start, end);
+    const sorted = sortTendencies(list);
+
+    let pageItems;
+    if (disablePagination) {
+      pageItems = sorted;
+    } else {
+      const start = (currentPage - 1) * rowsPerPage;
+      const end = start + rowsPerPage;
+      pageItems = sorted.slice(start, end);
+    }
 
     pageItems.forEach(t => {
       const row = document.createElement("tr");
       row.innerHTML = `
         <td>${t.tendency_id}</td>
-<td><span class="tendency-badge" style="background-color: ${t.color || '#ccc'};">${t.name}</span></td>
+        <td><span class="tendency-badge" style="background-color: ${t.color || '#ccc'};">${t.name}</span></td>
         <td>${t.description || "-"}</td>
         <td>${dimensionMap[t.dimension_id] || "-"}</td>
         <td>${t.is_active ? "✅ Active" : "❌ Inactive"}</td>
@@ -197,7 +248,11 @@
       tbody.appendChild(row);
     });
 
-    renderPagination(list);
+    if (!disablePagination) {
+      renderPagination(list);
+    } else {
+      document.getElementById("pagination").innerHTML = "";
+    }
 
     tbody.querySelectorAll("button[data-edit]").forEach(btn =>
       btn.addEventListener("click", async (e) => {
@@ -217,38 +272,35 @@
     );
 
     tbody.querySelectorAll("button[data-delete]").forEach(btn => {
-  btn.addEventListener("click", async (e) => {
-    const id = e.target.getAttribute("data-delete");
+      btn.addEventListener("click", async (e) => {
+        const id = e.target.getAttribute("data-delete");
 
-    const warning = `⚠️ Deleting this tendency will also remove:
+        const warning = `⚠️ Deleting this tendency will also remove:
 - All mappings from question options
 - All assessment weight assignments
 - All user assessment counts/scores
 
 Proceed?`;
 
-    const confirmed = confirm(warning);
-    if (!confirmed) return;
+        const confirmed = confirm(warning);
+        if (!confirmed) return;
 
-    try {
-      // Cleanup related mappings
-      await client.from("question_option_tendencies").delete().eq("tendency_id", id);
-      await client.from("assessment_tendency_weights").delete().eq("tendency_id", id);
-      await client.from("user_tendency_counts").delete().eq("tendency_id", id);
-      await client.from("assessment_scores").delete().eq("tendency_id", id);
+        try {
+          await client.from("question_option_tendencies").delete().eq("tendency_id", id);
+          await client.from("assessment_tendency_weights").delete().eq("tendency_id", id);
+          await client.from("user_tendency_counts").delete().eq("tendency_id", id);
+          await client.from("assessment_scores").delete().eq("tendency_id", id);
 
-      // Delete the actual tendency
-      await client.from("tendencies").delete().eq("id", id);
+          await client.from("tendencies").delete().eq("id", id);
 
-      alert("✅ Tendency and related mappings deleted successfully.");
-      await fetchAndDisplayTendencies();
-    } catch (err) {
-      console.error("❌ Delete failed:", err);
-      alert("Deletion failed. Please check console for details.");
-    }
-  });
-});
-
+          alert("✅ Tendency and related mappings deleted successfully.");
+          await fetchAndDisplayTendencies();
+        } catch (err) {
+          console.error("❌ Delete failed:", err);
+          alert("Deletion failed. Please check console for details.");
+        }
+      });
+    });
   }
 
   function renderPagination(list) {
@@ -286,6 +338,7 @@ Proceed?`;
     link.click();
     document.body.removeChild(link);
   }
-window.initTendenciesPage = initTendenciesPage;
+
+  window.initTendenciesPage = initTendenciesPage;
   initTendenciesPage();
 })();

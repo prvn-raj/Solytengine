@@ -153,7 +153,10 @@ function renderQuestions(questions, totalQuestions, tendencyMap, mapping) {
     const tendencyTags = uniqueTendencies.map(tid => {
       const t = tendencyMap[tid];
       const isPrimary = mappedTendencies.includes(tid);
-      return `<span class="tendency-tag${isPrimary ? ' primary-tag' : ''}" style="background-color: ${t?.color || '#ccc'}">${t?.name || 'Unknown'}${isPrimary ? ' 🌟' : ''}</span>`;
+return `<span class="tendency-tag${isPrimary ? ' primary-tag' : ''}" 
+        style="background-color: ${t?.color || '#ccc'}">
+        ${t?.name || 'Unknown'}
+        </span>`;
     }).join(" ");
     wrapper.innerHTML = `
       <div class="question-flex-row">

@@ -234,3 +234,7 @@ select option {
 }
 
 
+/* Make sortable table headers clickable */
+.user-table th.sortable {
+  cursor: pointer;
+}

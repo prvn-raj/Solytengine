@@ -257,6 +257,7 @@
       }
       await storeResponse(q.id, selected.value, timeSpent);
       currentQuestionIndex++;
+      await updateProgress();   // ✅ track progress
       renderQuestion();
     };
 
@@ -268,33 +269,39 @@
       }
       if (currentQuestionIndex > 0) {
         currentQuestionIndex--;
+        await updateProgress();   // ✅ track progress
         renderQuestion();
       }
     };
 
     // ✅ Exit now finalizes the attempt so attempts increment
     document.getElementById("exit-btn").onclick = async () => {
-      const confirmExit = confirm("Exit to dashboard? Your answers are saved and you can start a new attempt later.");
-      if (!confirmExit) return;
+  const confirmExit = confirm("Exit to dashboard? Your answers are saved and you can start a new attempt later.");
+  if (!confirmExit) return;
 
-      const selected = container.querySelector("input[name='option']:checked");
-      const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
-      if (selected) {
-        await storeResponse(q.id, selected.value, timeSpent);
-      }
+  const selected = container.querySelector("input[name='option']:checked");
+  const timeSpent = Math.floor((Date.now() - questionStartTime) / 1000);
+  if (selected) {
+    await storeResponse(q.id, selected.value, timeSpent);
+  }
 
-      if (timerInterval) clearInterval(timerInterval);
-      try {
-        await client
-          .from("user_assessments")
-          .update({ status: "completed", completed_at: new Date().toISOString() })
-          .eq("id", userAssessmentId);
-      } catch (e) {
-        /* best effort */
-      } finally {
-        window.location.href = "user_dashboard.html";
-      }
-    };
+  if (timerInterval) clearInterval(timerInterval);
+
+  try {
+    await client
+      .from("user_assessments")
+      .update({
+        status: "in_progress",   // ✅ keep as in_progress
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userAssessmentId);
+  } catch (e) {
+    console.warn("Exit update failed", e);
+  } finally {
+    window.location.href = "user_dashboard.html";
+  }
+};
+
   }
 
   async function preloadResponse(questionId) {
@@ -356,18 +363,33 @@
   }
 
   // Best-effort finalize when page is being closed / navigated away
-  async function handleAbandon() {
-    // Avoid spamming updates if we don't yet have a UA id
-    if (!userAssessmentId) return;
-    try {
-      await client
-        .from("user_assessments")
-        .update({ status: "completed", completed_at: new Date().toISOString() })
-        .eq("id", userAssessmentId);
-    } catch (e) {
-      // swallow; navigation should not be blocked
-    }
+ async function handleAbandon() {
+  if (!userAssessmentId) return;
+  try {
+    await client
+      .from("user_assessments")
+      .update({
+        status: "in_progress",   // ✅ not completed
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", userAssessmentId);
+  } catch (e) {
+    // swallow
   }
+}
+
+
+async function updateProgress() {
+  try {
+    await client
+      .from("user_assessments")
+      .update({ current_question_index: currentQuestionIndex })
+      .eq("id", userAssessmentId);
+  } catch (e) {
+    console.warn("⚠️ Failed to update progress index:", e.message);
+  }
+}
+
 
   window.addEventListener("DOMContentLoaded", initTakePage);
 })();

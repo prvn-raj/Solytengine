@@ -35,34 +35,38 @@
         </div>
       </form>
 
-      <!-- 🧠 Tendency Selection -->
-      <h2 class="section-title">🧠 Assign Tendencies</h2>
-      <div id="tendency-tag-selector" class="tag-grid"></div>
+     <!-- 🧠 Assign Tendencies -->
+<h2 class="section-title">🧠 Assign Tendencies</h2>
 
-      <div class="tag-container">
-        <div id="tendency-tag-selector-2" class="tag-selector"></div>
-        <div class="badge-container" id="selected-tendency-tags"></div>
-      </div>
+<!-- Global Search -->
+<div class="form-row" style="margin-bottom: 1rem;">
+  <input 
+    type="text" 
+    id="tendency-search" 
+    placeholder="🔍 Search tendencies across all dimensions..." 
+    class="search-box"
+    style="width:100%; padding:8px; border:1px solid #ccc; border-radius:6px;" 
+  />
+</div>
 
+<!-- Accordion groups by dimension -->
+<div id="tendency-accordion-container">
+  <!-- JS will render collapsible groups here -->
+</div>
 
-      
-      <!-- Mapping Table -->
-       
-      <table id="tendency-weight-table" class="user-table" style="margin-top: 20px;">
-        
-        <thead>
-          <tr>
-            <th>Tendency</th>
-            <th>Dimension</th>
-            <th>Weight %</th>            
-            <th>Remove</th>
-          </tr>
-          
-        </thead>
-        
-        <tbody></tbody>
-        
-      </table>
+<!-- Mapping Table (same as before) -->
+<table id="tendency-weight-table" class="user-table" style="margin-top: 20px;">
+  <thead>
+    <tr>
+      <th>Tendency</th>
+      <th>Dimension</th>
+      <th>Weight %</th>            
+      <th>Remove</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
 
       <!-- Submit Button -->
       <div class="form-row" style="margin-top: 20px; text-align: center;">

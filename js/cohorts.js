@@ -45,6 +45,7 @@
             return;
         }
 
+        
         const { data: cohort, error } = await client
             .from("cohorts")
             .insert([{ name, description, start_date, end_date, created_by }])

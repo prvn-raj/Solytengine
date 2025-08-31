@@ -294,3 +294,12 @@ body.dashboard-body {
 .submit-btn:hover {
   background-color: #de4248;
 }
+
+/* Highlight star only for primary tags */
+.primary-tag::after {
+  content: "🌟";
+  margin-left: 4px;
+  font-size: 12px;
+  vertical-align: middle;
+  display: inline-block;
+}

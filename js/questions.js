@@ -5,11 +5,14 @@
   let allQuestions = [];
   let currentPage = 1;
   const rowsPerPage = 7;
+
+  // 🔑 Sorting state
   let sortAsc = true;
-  let currentSortField = 'question_id';
+  let currentSortField = "question_id";
 
   let dimensionMap = {};  // dimension_id → { name, color }
   let tendencyMap = {};   // dimension_id → [tendencies]
+  
 
   async function initQuestionsPage() {
     await populateDimensionDropdown();
@@ -29,15 +32,15 @@
       if (type === "true_false" && currentOptions.length >= 2) return alert("True/False can only have 2 options");
 
       if (currentOptions.length > 0) {
-        const last = currentOptions[currentOptions.length - 1];
-        const text = last.valueInput.value.trim();
-        const hasAnyMapping = last.tendencySelectors.some(sel => sel.select.selectedOptions.length > 0);
+  const last = currentOptions[currentOptions.length - 1];
+  const text = last.valueInput.value.trim();
+  const chipCount = last.block.querySelectorAll(".selected-chips .chip").length;
 
-        if (!text || !hasAnyMapping) {
-          alert("Please complete the last option with a value and at least one tendency before adding a new one.");
-          return;
-        }
-      }
+  if (!text || chipCount === 0) {
+    alert("Please complete the last option with a value and at least one tendency before adding a new one.");
+    return;
+  }
+}
 
       addOptionBlock(type);
     });
@@ -48,15 +51,24 @@
     });
 
     if (searchInput) {
-      searchInput.addEventListener("input", () => {
-        const keyword = searchInput.value.trim().toLowerCase();
-        const filtered = allQuestions.filter(q =>
-          q.question_text.toLowerCase().includes(keyword) ||
-          (q.dimension_type || "").toLowerCase().includes(keyword)
-        );
-        renderQuestionTable(filtered);
-      });
+  searchInput.addEventListener("input", () => {
+    const keyword = searchInput.value.trim().toLowerCase();
+
+    if (keyword === "") {
+      // 🔄 Reset to full list with pagination
+      currentPage = 1;
+      renderQuestionTable(allQuestions, false);
+    } else {
+      const filtered = allQuestions.filter(q =>
+        q.question_text.toLowerCase().includes(keyword) ||
+        (q.dimension_type || "").toLowerCase().includes(keyword)
+      );
+      // 🔍 Show all results, disable pagination
+      renderQuestionTable(filtered, true);
     }
+  });
+}
+
 
     if (exportBtn) {
       exportBtn.addEventListener("click", exportTableToCSV);
@@ -81,14 +93,19 @@
         return;
       }
 
-      for (const opt of currentOptions) {
-        const optionText = opt.valueInput.value.trim();
-        const hasAny = opt.tendencySelectors.some(ts => ts.select.selectedOptions.length > 0);
-        if (!optionText || !hasAny) {
-          alert("Each option must have a label and be mapped to at least one tendency.");
-          return;
-        }
-      }
+    for (const opt of currentOptions) {
+  const optionText = opt.valueInput.value.trim();
+
+  // ✅ Use the selectedChips container for this option
+  const selectedChips = opt.block.querySelectorAll(".selected-chips .chip");
+  const hasAny = selectedChips.length > 0;
+
+  if (!optionText || !hasAny) {
+    alert("Each option must have a label and be mapped to at least one tendency.");
+    return;
+  }
+}
+
 
       const admin = await client.auth.getUser();
       const created_by = admin.data.user.id;
@@ -135,20 +152,24 @@
         inserted = data;
       }
 
-      for (const opt of currentOptions) {
-        const optionText = opt.valueInput.value.trim();
-        for (const { select, dimension_id } of opt.tendencySelectors) {
-          Array.from(select.selectedOptions).forEach(async o => {
-            await client.from("question_option_tendencies").insert({
-              question_id: inserted.id,
-              option_value: optionText,
-              tendency_id: o.value,
-              dimension_id,
-              weight: 1
-            });
-          });
-        }
-      }
+     for (const opt of currentOptions) {
+  const optionText = opt.valueInput.value.trim();
+
+  const selectedChips = opt.block.querySelectorAll(".selected-chips .chip");
+  for (const chip of selectedChips) {
+    const tendencyId = chip.getAttribute("data-id");
+    const dimensionId = chip.getAttribute("data-dimension");
+
+    await client.from("question_option_tendencies").insert({
+      question_id: inserted.id,
+      option_value: optionText,
+      tendency_id: tendencyId,
+      dimension_id: dimensionId,
+      weight: 1
+    });
+  }
+}
+
 
       form.reset();
       document.getElementById("options-container").innerHTML = "";
@@ -158,58 +179,136 @@
     });
   }
 
-  function addOptionBlock(type) {
-    const container = document.getElementById("options-container");
-    const block = document.createElement("div");
-    block.classList.add("option-block");
+  // ===============================
+// 🔄 Replace your addOptionBlock()
+// ===============================
+function addOptionBlock(type) {
+  const container = document.getElementById("options-container");
+  const block = document.createElement("div");
+  block.classList.add("option-block");
 
-    const valueInput = document.createElement("input");
-    valueInput.type = "text";
-    valueInput.placeholder = "Answer Option";
-    valueInput.classList.add("option-input");
+  // Answer text input
+  const valueInput = document.createElement("input");
+  valueInput.type = "text";
+  valueInput.placeholder = "Answer Option";
+  valueInput.classList.add("option-input");
 
-    if (type === "true_false") {
-      valueInput.value = currentOptions.length === 0 ? "True" : "False";
-      valueInput.readOnly = true;
-    }
-
-    block.appendChild(valueInput);
-
-    const mapping = document.createElement("div");
-    mapping.classList.add("tendency-mapping");
-
-    const tendencySelectors = [];
-    for (const [dimId, tendencies] of Object.entries(tendencyMap)) {
-      const select = document.createElement("select");
-      select.multiple = true;
-      select.title = dimensionMap[dimId]?.name || dimId;
-
-      tendencies.forEach(t => {
-        const opt = document.createElement("option");
-        opt.value = t.id;
-        opt.textContent = t.name;
-        select.appendChild(opt);
-      });
-
-      mapping.appendChild(select);
-      tendencySelectors.push({ select, dimension_id: dimId });
-    }
-
-    block.appendChild(mapping);
-
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.textContent = "❌ Remove Option";
-    removeBtn.className = "remove-option-btn";
-    removeBtn.onclick = () => {
-      container.removeChild(block);
-      currentOptions = currentOptions.filter(o => o.block !== block);
-    };
-    block.appendChild(removeBtn);
-
-    container.appendChild(block);
-    currentOptions.push({ block, valueInput, tendencySelectors });
+  if (type === "true_false") {
+    valueInput.value = currentOptions.length === 0 ? "True" : "False";
+    valueInput.readOnly = true;
   }
+  block.appendChild(valueInput);
+
+  // ✅ Selected tendencies panel (new box inside option)
+  const selectedPanel = document.createElement("div");
+  selectedPanel.className = "selected-tendencies-panel";
+  selectedPanel.innerHTML = `<h5>Selected Tendencies</h5><div class="selected-chips"></div>`;
+  block.appendChild(selectedPanel);
+
+  const mapping = document.createElement("div");
+  mapping.classList.add("tendency-mapping");
+
+  const selectedChips = selectedPanel.querySelector(".selected-chips");
+  const tendencySelectors = [];
+
+  // ✅ For each dimension, create search + results list
+  for (const [dimId, tendencies] of Object.entries(tendencyMap)) {
+    const dimBox = document.createElement("div");
+    dimBox.classList.add("dimension-box");
+
+    const label = document.createElement("label");
+    label.textContent = dimensionMap[dimId]?.name || dimId;
+    dimBox.appendChild(label);
+
+    // Search input
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.placeholder = `Search ${dimensionMap[dimId]?.name || dimId} tendencies...`;
+    searchInput.classList.add("tendency-search");
+    dimBox.appendChild(searchInput);
+
+    // List of results
+    const list = document.createElement("div");
+    list.classList.add("tendency-list");
+    dimBox.appendChild(list);
+
+    // Render all tendencies initially
+    renderTendencyList(list, tendencies, dimId, selectedChips, tendencySelectors);
+
+    // Hook up search
+    searchInput.addEventListener("input", () => {
+      const keyword = searchInput.value.toLowerCase();
+      const filtered = tendencies.filter(t => t.name.toLowerCase().includes(keyword));
+      renderTendencyList(list, filtered, dimId, selectedChips, tendencySelectors);
+    });
+
+    mapping.appendChild(dimBox);
+  }
+
+  block.appendChild(mapping);
+
+  // Remove button
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.textContent = "❌ Remove Option";
+  removeBtn.className = "remove-option-btn";
+  removeBtn.onclick = () => {
+    container.removeChild(block);
+    currentOptions = currentOptions.filter(o => o.block !== block);
+  };
+  block.appendChild(removeBtn);
+
+  container.appendChild(block);
+  currentOptions.push({ block, valueInput, tendencySelectors });
+}
+
+
+
+// ===============================
+// 🆕 Helper: render tendency list
+// ===============================
+function renderTendencyList(list, tendencies, dimId, chipContainer, tendencySelectors) {
+  list.innerHTML = "";
+  tendencies.forEach(t => {
+    const item = document.createElement("div");
+    item.className = "tendency-item";
+    item.textContent = t.name;
+    item.style.backgroundColor = t.color || "#ddd";
+
+    item.onclick = () => {
+      // Prevent duplicates
+      if (chipContainer.querySelector(`[data-id="${t.id}"]`)) return;
+
+      // Add chip
+      const chip = document.createElement("span");
+      chip.className = "tendency-chip chip";
+      chip.dataset.id = t.id;
+      chip.dataset.dimension = dimId;    // ✅ added dimension
+      chip.textContent = t.name;
+      chip.style.backgroundColor = t.color || "#ccc";
+
+      const remove = document.createElement("span");
+      remove.textContent = " ✖";
+      remove.style.cursor = "pointer";
+      remove.onclick = () => {
+        chip.remove();
+        // Remove from selectors too
+        const idx = tendencySelectors.findIndex(sel => sel.tendencyId === t.id && sel.dimension_id === dimId);
+        if (idx > -1) tendencySelectors.splice(idx, 1);
+      };
+      chip.appendChild(remove);
+
+      chipContainer.appendChild(chip);
+
+      // Add to selectors (for saving)
+      tendencySelectors.push({ tendencyId: t.id, dimension_id: dimId });
+    };
+
+    list.appendChild(item);
+  });
+}
+
+
 
   async function fetchTendencies() {
     const { data: tendencies } = await client.from("tendencies").select("id, name, dimension_id, color, is_active").eq("is_active", true);
@@ -265,13 +364,52 @@
     renderQuestionTable(allQuestions);
   }
 
-  function renderQuestionTable(dataList) {
-    const table = document.getElementById("question-table-body");
-    table.innerHTML = "";
+  // 🔑 Sorting helper
+  function sortQuestions(dataList) {
+    return [...dataList].sort((a, b) => {
+      let valA = a[currentSortField] || "";
+      let valB = b[currentSortField] || "";
 
+      // Normalize strings to lowercase
+      if (typeof valA === "string") valA = valA.toLowerCase();
+      if (typeof valB === "string") valB = valB.toLowerCase();
+
+      // Numeric sort for difficulty
+      if (currentSortField === "difficulty_level") {
+        valA = Number(valA);
+        valB = Number(valB);
+      }
+
+      if (valA < valB) return sortAsc ? -1 : 1;
+      if (valA > valB) return sortAsc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  window.sortBy = (field) => {
+    if (currentSortField === field) {
+      sortAsc = !sortAsc; // toggle
+    } else {
+      currentSortField = field;
+      sortAsc = true;
+    }
+    renderQuestionTable(allQuestions);
+  };
+
+  function renderQuestionTable(dataList, disablePagination = false) {
+  const table = document.getElementById("question-table-body");
+  table.innerHTML = "";
+
+  const sorted = sortQuestions(dataList);
+
+  let pageItems;
+  if (disablePagination) {
+    pageItems = sorted; // show all matches at once
+  } else {
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
-    const pageItems = dataList.slice(start, end);
+    pageItems = sorted.slice(start, end);
+  }
 
     pageItems.forEach(q => {
       const row = document.createElement("tr");
@@ -288,6 +426,7 @@
         </td>
       `;
 
+      // … existing bindings preserved …
       row.querySelector(".action-view").onclick = async () => {
         const tendencies = await getTendenciesForQuestion(q.id);
         const modal = document.getElementById("tendency-modal");
@@ -308,7 +447,6 @@
             badgeContainer.appendChild(badge);
           });
         }
-
         modal.style.display = "block";
       };
 
@@ -327,7 +465,6 @@
 
       row.querySelector(".action-delete").onclick = async () => {
         if (!confirm("Are you sure you want to delete this question?")) return;
-
         try {
           await client.from("question_option_tendencies").delete().eq("question_id", q.id);
           await client.from("question_tendency_mappings").delete().eq("question_id", q.id);
@@ -343,8 +480,12 @@
       table.appendChild(row);
     });
 
+     if (!disablePagination) {
     renderPagination(dataList);
+  } else {
+    document.getElementById("pagination").innerHTML = ""; // hide pagination during search
   }
+}
 
   async function getTendenciesForQuestion(questionId) {
     const { data, error } = await client
@@ -356,7 +497,6 @@
       console.error("Error loading tendencies:", error);
       return [];
     }
-
     return data.map(d => d.tendencies);
   }
 
@@ -439,5 +579,5 @@
   }
 
   window.initQuestionsPage = initQuestionsPage;
-  initQuestionsPage();
+  //initQuestionsPage();
 })();

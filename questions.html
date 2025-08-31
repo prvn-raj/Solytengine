@@ -17,7 +17,7 @@
       <h2 class="section-title">➕ Add Question</h2>
       <form id="question-form" class="user-form">
         <div class="form-row">
-          <label>Behaviour ID</label>
+          <label>Question ID</label>
           <input type="text" id="question_id" readonly />
         </div>
         <div class="form-row">
@@ -56,10 +56,11 @@
         <div class="form-row" style="grid-column: span 2;">
           <label>Options & Tendency Mapping *</label>
           <div id="options-container"></div>
+          
           <button type="button" id="add-option-btn" class="submit-btn" style="margin-top: 10px;">➕ Add Option</button>
         </div>
 
-        <button type="submit" class="submit-btn">💾 Save Behaviour</button>
+        <button type="submit" class="submit-btn">💾 Save Question</button>
       </form>
 
       <!-- 📋 Questions List -->  
@@ -78,16 +79,17 @@
 </div>
 
       <table class="user-table">
-        <thead>
-          <tr>  
-            <th id="sort-id" style="cursor:pointer;">Behaviour ID ⬍</th>
-            <th>Question</th>
-            <th>Type</th>
-            <th>Dimension</th>
-            <th>Difficulty</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+<thead>
+  <tr>
+    <th class="sortable" data-field="question_id" data-label="Question ID" onclick="sortBy('question_id')">Question ID</th>
+    <th>Text</th>
+    <th class="sortable" data-field="question_type" data-label="Type" onclick="sortBy('question_type')">Type</th>
+    <th class="sortable" data-field="dimension_type" data-label="Dimension" onclick="sortBy('dimension_type')">Dimension</th>
+    <th class="sortable" data-field="difficulty_level" data-label="Difficulty" onclick="sortBy('difficulty_level')">Difficulty</th>
+    <th>Actions</th>
+  </tr>
+</thead>
+
         <tbody id="question-table-body">
           <tr><td colspan="6" style="text-align:center;">⏳ Loading questions...</td></tr>
         </tbody>

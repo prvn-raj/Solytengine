@@ -236,48 +236,56 @@
         btn.className = "start-btn";
 
         // button state rules (unchanged except we don't disable on completed if attempts remain)
-        if (expired) {
-          btn.disabled = true;
-          btn.textContent = "⌛ Expired";
-          btn.classList.add("disabled-btn");
-          btn.setAttribute("data-tooltip", "This assessment has expired.");
-        } else if (maxAttempts && attemptsUsed >= maxAttempts) {
-          btn.disabled = true;
-          btn.textContent = "🚫 No Attempts";
-          btn.classList.add("disabled-btn");
-          btn.setAttribute("data-tooltip", "No attempts left for this assessment.");
-        } else if ((statusMap[assignment.id] || "not_started") === "in_progress") {
-          btn.textContent = "▶️ Resume";
-          btn.onclick = async () => {
-            // find latest in-progress UA to deep-link directly to Take
-            const { data: ua } = await client
-              .from("user_assessments")
-              .select("id")
-              .eq("assignment_id", assignment.id)
-              .eq("app_user_id", appUserId)
-              .eq("status", "in_progress")
-              .order("created_at", { ascending: false })
-              .limit(1)
-              .maybeSingle();
+// button state rules
+if (expired) {
+  btn.disabled = true;
+  btn.textContent = "⌛ Expired";
+  btn.classList.add("disabled-btn");
+  btn.setAttribute("data-tooltip", "This assessment has expired.");
+} else if (maxAttempts && attemptsUsed >= maxAttempts) {
+  btn.disabled = true;
+  btn.textContent = "🚫 No Attempts";
+  btn.classList.add("disabled-btn");
+  btn.setAttribute("data-tooltip", "No attempts left for this assessment.");
+} else if ((statusMap[assignment.id] || "not_started") === "in_progress") {
+  btn.textContent = "▶️ Resume";
+  btn.onclick = async () => {
+    // find latest in-progress UA to deep-link directly to Take
+    const { data: ua } = await client
+      .from("user_assessments")
+      .select("id")
+      .eq("assignment_id", assignment.id)
+      .eq("app_user_id", appUserId)
+      .eq("status", "in_progress")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-            const target = ua?.id
-              ? `user_take.html?assignment_id=${encodeURIComponent(assignment.id)}&user_assessment_id=${encodeURIComponent(ua.id)}`
-              : `assessment_prep.html?assignment_id=${encodeURIComponent(assignment.id)}`;
+    const target = ua?.id
+      ? `user_take.html?assignment_id=${encodeURIComponent(assignment.id)}&user_assessment_id=${encodeURIComponent(ua.id)}`
+      : `assessment_prep.html?assignment_id=${encodeURIComponent(assignment.id)}`;
 
-            window.location.href = target;
-          };
-        } else {
-          btn.textContent = "🚀 Start";
-          btn.onclick = async () => {
-            const started = attemptsUsed;
-            const max = Number.isFinite(assignment.max_attempts) ? assignment.max_attempts : 1;
-            if (max && started >= max) {
-              alert("❌ No attempts left for this assessment.");
-              return;
-            }
-            window.location.href = `assessment_prep.html?assignment_id=${encodeURIComponent(assignment.id)}`;
-          };
-        }
+    window.location.href = target;
+  };
+} else if ((statusMap[assignment.id] || "not_started") === "completed") {
+  // ✅ NEW: Completed status should not show Start
+  btn.disabled = true;
+  btn.textContent = "✅ Completed";
+  btn.classList.add("disabled-btn");
+  btn.setAttribute("data-tooltip", "This assessment is already completed.");
+} else {
+  btn.textContent = "🚀 Start";
+  btn.onclick = async () => {
+    const started = attemptsUsed;
+    const max = Number.isFinite(assignment.max_attempts) ? assignment.max_attempts : 1;
+    if (max && started >= max) {
+      alert("❌ No attempts left for this assessment.");
+      return;
+    }
+    window.location.href = `assessment_prep.html?assignment_id=${encodeURIComponent(assignment.id)}`;
+  };
+}
+
 
         card.appendChild(info);
         card.appendChild(btn);

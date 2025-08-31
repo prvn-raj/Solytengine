@@ -97,8 +97,8 @@
           const tendencyId = row.getAttribute("data-id");
           const weight = parseInt(row.querySelector(".weight-input").value);
 
-          if (!weight || weight <= 0) {
-            alert("❌ Weight must be greater than zero for all selected tendencies.");
+          if (weight == null || weight < 0) {
+            alert("❌ Weight must be greater than or equal to zero for all selected tendencies.");
             return;
           }
 
@@ -152,7 +152,8 @@
       });
     }
   }
-   function validateWeightSumLive() {
+
+  function validateWeightSumLive() {
     const weightInputs = document.querySelectorAll(".weight-input");
     const totalWeight = [...weightInputs].reduce((acc, input) => acc + parseFloat(input.value || 0), 0);
     const btn = document.querySelector("button[form='assessments-form']");
@@ -164,81 +165,122 @@
     }
   }
 
-  async function populateNextAssessmentId() {
-    const input = document.getElementById("assessment_id");
-    if (!input) return;
+ async function populateNextAssessmentId() {
+  const input = document.getElementById("assessment_id");
+  if (!input) return;
 
-    const { data } = await client
-      .from("assessments")
-      .select("assessment_id")
-      .order("created_at", { ascending: false })
-      .limit(1);
+  const { data, error } = await client
+    .from("assessments")
+    .select("assessment_id");
 
-    let nextId = "SOLASS-001";
-    if (data && data.length > 0 && data[0].assessment_id) {
-      const last = data[0].assessment_id;
-      const lastNum = parseInt(last.split("-")[1]);
-      nextId = `SOLASS-${String(lastNum + 1).padStart(3, "0")}`;
-    }
-    input.value = nextId;
+  if (error) {
+    console.error("Error fetching assessments:", error);
+    input.value = "SOLASS-001";
+    return;
   }
+
+  let nextId = "SOLASS-001";
+
+  if (data && data.length > 0) {
+    // extract the numeric part from all IDs
+    const numbers = data
+      .map(a => parseInt(a.assessment_id?.split("-")[1] || "0"))
+      .filter(n => !isNaN(n));
+
+    const maxNum = Math.max(...numbers, 0);
+    nextId = `SOLASS-${String(maxNum + 1).padStart(3, "0")}`;
+  }
+
+  input.value = nextId;
+}
+
 
   async function fetchTendencies() {
-    const { data: tendencies } = await client
-      .from("tendencies")
-      .select("id, name, dimension_id, color")
-      .eq("is_active", true)
-      .order("name", { ascending: true });
+  const { data: tendencies } = await client
+    .from("tendencies")
+    .select("id, name, dimension_id, color")
+    .eq("is_active", true)
+    .order("name", { ascending: true });
 
-    const { data: dimensions } = await client
-      .from("dimensions")
-      .select("id, name, color");
+  const { data: dimensions } = await client
+    .from("dimensions")
+    .select("id, name, color");
 
-    dimensionMap = {};
-    dimensions.forEach(d => {
-      dimensionMap[d.id] = { name: d.name, color: d.color };
-    });
+  dimensionMap = {};
+  dimensions.forEach(d => {
+    dimensionMap[d.id] = { name: d.name, color: d.color };
+  });
 
-    allTendencies = tendencies;
-    const tagContainer = document.getElementById("tendency-tag-selector");
-    tagContainer.innerHTML = "";
-    tagContainer.classList.add("tag-grid");
+  allTendencies = tendencies;
 
-    const grouped = {};
-    tendencies.forEach(t => {
-      if (!grouped[t.dimension_id]) grouped[t.dimension_id] = [];
-      grouped[t.dimension_id].push(t);
-    });
+  // Group tendencies by dimension
+  const grouped = {};
+  tendencies.forEach(t => {
+    if (!grouped[t.dimension_id]) grouped[t.dimension_id] = [];
+    grouped[t.dimension_id].push(t);
+  });
 
-    const orderedDimensionIds = Object.keys(grouped).sort((a, b) => {
-      const nameA = (dimensionMap[a]?.name || "z").toLowerCase();
-      const nameB = (dimensionMap[b]?.name || "z").toLowerCase();
-      if (nameA === "competency") return -1;
-      if (nameB === "competency") return 1;
-      return nameA.localeCompare(nameB);
-    });
+  // Render accordion
+  const container = document.getElementById("tendency-accordion-container");
+  container.innerHTML = "";
 
-    for (const dimension of orderedDimensionIds) {
-      const section = document.createElement("div");
-      section.className = "dimension-group";
-      const title = document.createElement("h4");
-      title.textContent = dimensionMap[dimension]?.name || dimension;
-      title.style.borderBottom = `4px solid ${dimensionMap[dimension]?.color || "#999"}`;
-      section.appendChild(title);
+  Object.keys(grouped).forEach(dimId => {
+    const dimName = dimensionMap[dimId]?.name || dimId;
+    const dimColor = dimensionMap[dimId]?.color || "#999";
 
-      grouped[dimension].forEach(t => {
-        const tag = document.createElement("div");
-        tag.className = "tag";
-        tag.textContent = t.name;
-        tag.style.backgroundColor = t.color || "#777";
-        tag.style.color = "#fff";
-        tag.onclick = () => handleTendencyClick(t);
-        section.appendChild(tag);
+    const section = document.createElement("div");
+    section.className = "accordion-section";
+    section.innerHTML = `
+      <div class="accordion-header" style="cursor:pointer; padding:8px; border:1px solid #ccc; margin-bottom:4px; background:${dimColor}20;">
+        <strong>${dimName}</strong>
+       
+      </div>
+      <div class="accordion-body" style="display:none; padding:8px;">
+        ${grouped[dimId].map(t => `
+          <div class="tendency-item" 
+               data-id="${t.id}" 
+               data-dimension="${dimId}" 
+               style="cursor:pointer; display:inline-block; padding:6px 10px; margin:4px; background:${t.color || "#777"}; color:#fff; border-radius:12px;">
+            ${t.name}
+          </div>
+        `).join("")}
+      </div>
+    `;
+    container.appendChild(section);
+
+  
+// Toggle collapse
+const header = section.querySelector(".accordion-header");
+const body = section.querySelector(".accordion-body");
+body.style.display = "block"; // open by default
+header.classList.add("open"); // set arrow ▼ by default
+
+header.addEventListener("click", () => {
+  const isOpen = body.style.display === "block";
+  body.style.display = isOpen ? "none" : "block";
+  header.classList.toggle("open");
+});
+
+    // Add click handler for tendencies
+    body.querySelectorAll(".tendency-item").forEach(tag => {
+      tag.addEventListener("click", () => {
+        const tendencyId = tag.getAttribute("data-id");
+        const dimId = tag.getAttribute("data-dimension");
+        const tendency = tendencies.find(x => x.id === tendencyId);
+        handleTendencyClick(tendency);
       });
+    });
+  });
 
-      tagContainer.appendChild(section);
-    }
-  }
+  // Global search filter
+  document.getElementById("tendency-search").addEventListener("input", (e) => {
+    const keyword = e.target.value.toLowerCase();
+    document.querySelectorAll(".tendency-item").forEach(item => {
+      item.style.display = item.textContent.toLowerCase().includes(keyword) ? "inline-block" : "none";
+    });
+  });
+}
+
 
   function handleTendencyClick(tendency) {
     if (selectedTendencies.includes(tendency.id)) return;
@@ -265,22 +307,44 @@
     });
   }
 
+ async function loadAssessments() {
+  
 
-  async function loadAssessments() {
-    console.log("🚀 loadAssessments() called");
-    const { data, error } = await client
-      .from("assessments")
-      .select("id, assessment_id, name, total_questions, time_limit_minutes, created_at, created_by, status")
-      .order("created_at", { ascending: false });
+  // 📌 Step 1: fetch assessments
+  const { data: assessments, error } = await client
+    .from("assessments")
+    .select("id, assessment_id, name, total_questions, time_limit_minutes, created_at, created_by, status")
+    .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Failed to load assessments:", error);
-      return;
-    }
-
-    allAssessments = data;
-    renderAssessmentsTable(allAssessments);
+  if (error) {
+    console.error("Failed to load assessments:", error);
+    return;
   }
+
+  // 📌 Step 2: fetch user_roles to map supabase_user_id → email
+  const { data: roles, error: rolesErr } = await client
+    .from("user_roles")
+    .select("supabase_user_id, email");
+
+  if (rolesErr) {
+    console.error("Failed to load user roles:", rolesErr);
+  }
+
+  const creatorMap = {};
+  (roles || []).forEach(r => {
+    creatorMap[r.supabase_user_id] = r.email;
+  });
+
+  // 📌 Step 3: enrich assessments with creatorEmail
+  allAssessments = (assessments || []).map(a => ({
+    ...a,
+    creatorEmail: creatorMap[a.created_by] || "-"
+  }));
+
+  // 📌 Step 4: render updated table
+  renderAssessmentsTable(allAssessments);
+}
+
 
   function renderAssessmentsTable(dataList) {
     const table = document.getElementById("assessment-table-body");
@@ -304,7 +368,7 @@
         ${a.status?.toUpperCase() || 'DRAFT'}
         </span>
         </td>
-        <td>${a.created_by || "-"}</td>
+        <td>${a.creatorEmail}</td>
         <td>
           <button class="action-btn action-edit" data-id="${a.id}">✏️</button>
           <button class="action-btn action-delete" data-id="${a.id}">🗑️</button>
@@ -312,10 +376,13 @@
         </td>
       `;
       table.appendChild(row);
-      row.querySelector(".action-test").addEventListener("click", () => {
-  window.open(`admin_take.html?id=${a.id}`, "_blank");
-});
 
+      // 🧪 Test button: clear tendencies before launching
+      row.querySelector(".action-test").addEventListener("click", () => {
+        document.getElementById("tendency-weight-table").querySelector("tbody").innerHTML = "";
+        selectedTendencies = [];``
+        window.open(`admin_take.html?id=${a.id}`, "_blank");
+      });
     });
 
     document.querySelectorAll(".action-edit").forEach(btn => {
@@ -348,14 +415,16 @@
     document.getElementById("randomize_options").checked = data.randomize_options;
     document.getElementById("allow_resume").checked = data.allow_resume;
 
+    // ✅ Clear old tendencies before adding new
+    selectedTendencies = [];
+    const tbody = document.getElementById("tendency-weight-table").querySelector("tbody");
+    tbody.innerHTML = "";
+
     const { data: mappings } = await client
       .from("assessment_tendency_weights")
       .select("tendency_id, weightage_percentage")
       .eq("assessment_id", id);
 
-    selectedTendencies = [];
-    const tbody = document.getElementById("tendency-weight-table").querySelector("tbody");
-    tbody.innerHTML = "";
     for (const m of mappings) {
       const tendency = allTendencies.find(t => t.id === m.tendency_id);
       if (!tendency) continue;
@@ -385,8 +454,7 @@
   async function deleteAssessment(id) {
     if (!confirm("Are you sure you want to delete this assessment?")) return;
     await client.from("assessment_tendency_weights").delete().eq("assessment_id", id);
-await client.from("assessments").delete().eq("id", id);
-
+    await client.from("assessments").delete().eq("id", id);
     await loadAssessments();
   }
 
@@ -400,11 +468,11 @@ await client.from("assessments").delete().eq("id", id);
       <button ${currentPage === totalPages ? "disabled" : ""} onclick="changeAssessmentPage(${currentPage + 1})">Next ❯</button>`;
   }
 
-window.addEventListener("message", (event) => {
-  if (event.data?.type === "refreshAssessments") {
-    loadAssessments();  // Re-fetch assessments and update table
-  }
-});
+  window.addEventListener("message", (event) => {
+    if (event.data?.type === "refreshAssessments") {
+      loadAssessments();  // Re-fetch assessments and update table
+    }
+  });
 
   window.changeAssessmentPage = (page) => {
     currentPage = page;
