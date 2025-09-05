@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Assessment v2 - Solyte</title>
+  <link href="/css/user_take_v2.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js" defer></script>
+  <script src="/js/supabaseClient.js" defer></script>
+  <script src="/js/question_engine.js" defer></script>
+  <script type="module" src="/js/user_take_v2.js"></script>
+
+</head>
+<body>
+  <div class="take-layout">
+    <!-- Left side: Canvas -->
+    <div class="visual-side">
+      <canvas id="visual" width="500" height="500"></canvas>
+    </div>
+
+    <!-- Right side: Questions -->
+    <div class="question-side">
+      <header class="take-header">
+        <h1>📝 Take Assessment (v2)</h1>
+        <div id="progress-container"><div id="progress-bar"></div></div>
+        <div id="timer" class="timer-container hidden">⏱ <span id="countdown">--:--</span></div>
+        <p id="question-number-label"></p>
+      </header>
+
+      <main class="take-main">
+        <div id="question-container" class="question-card">
+          <p>⏳ Loading questions...</p>
+        </div>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

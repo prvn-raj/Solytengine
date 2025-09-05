@@ -1,0 +1,113 @@
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: "Lexend", sans-serif;
+}
+
+.take-layout {
+  display: flex;
+  height: 100vh;
+}
+
+.visual-side {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  border-right: 2px solid #eee;
+}
+
+#visual {
+  max-width: 90%;
+  max-height: 90%;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  background: #fff;
+}
+
+.question-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: #fff;
+}
+
+.take-header {
+  margin-bottom: 20px;
+}
+
+#progress-container {
+  background: #eee;
+  border-radius: 6px;
+  height: 10px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+#progress-bar {
+  height: 100%;
+  width: 0;
+  background: #de4248;
+  transition: width 0.3s ease;
+}
+
+.question-card {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.options-container {
+  margin-top: 16px;
+}
+
+.option-box {
+  display: block;
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.option-box:hover {
+  background: #f9f9f9;
+}
+
+.nav-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+}
+
+button {
+  font-family: "Lexend", sans-serif;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.secondary {
+  background: #f2f2f2;
+  color: #444;
+}
+
+button:not(.secondary) {
+  background: #de4248;
+  color: #fff;
+}
+
+.timer-container {
+  font-weight: 600;
+  color: #333;
+}
