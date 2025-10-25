@@ -366,17 +366,27 @@
  async function handleAbandon() {
   if (!userAssessmentId) return;
   try {
-    await client
+    // Fetch current status before overwriting
+    const { data: ua } = await client
       .from("user_assessments")
-      .update({
-        status: "in_progress",   // ✅ not completed
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", userAssessmentId);
+      .select("status")
+      .eq("id", userAssessmentId)
+      .single();
+
+    if (ua?.status !== "completed") {
+      await client
+        .from("user_assessments")
+        .update({
+          status: "in_progress",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userAssessmentId);
+    }
   } catch (e) {
-    // swallow
+    console.warn("⚠️ handleAbandon failed", e.message);
   }
 }
+
 
 
 async function updateProgress() {

@@ -312,16 +312,37 @@ if (startBtn) {
 // --- environment step ---
 async function renderEnvironment() {
   setStatus('Checking device…');
-  const conn = await envCheck.probeConnectivity();
-  const dev  = await envCheck.getDeviceSummary();
+
+  // ✅ Safe fallbacks
+  let conn = { online: navigator.onLine, avgLatencyMs: 0 };
+  let dev = {
+    screen: { w: window.innerWidth, h: window.innerHeight },
+    battery: { level: 100, charging: true },
+    keyboardLikely: true
+  };
+
+  // Try envCheck, fall back if it fails
+  try {
+    const c = await envCheck.probeConnectivity();
+    if (c) conn = c;
+  } catch (e) {
+    console.warn("⚠ envCheck.probeConnectivity failed, using fallback:", e);
+  }
+
+  try {
+    const d = await envCheck.getDeviceSummary();
+    if (d) dev = d;
+  } catch (e) {
+    console.warn("⚠ envCheck.getDeviceSummary failed, using fallback:", e);
+  }
 
   const envDiv = $id('env-results');
   if (envDiv) {
     // Threshold logic
-    const latency = conn.avgLatencyMs;
-    const battery = dev.battery.level ?? 100;
-    const screenOk = dev.screen.w >= 1024 && dev.screen.h >= 600;
-    const keyboardOk = dev.keyboardLikely;
+    const latency = conn.avgLatencyMs ?? 0;
+    const battery = dev.battery?.level ?? 100;
+    const screenOk = dev.screen?.w >= 1024 && dev.screen?.h >= 600;
+    const keyboardOk = dev.keyboardLikely ?? true;
 
     // Connectivity
     let connClass = 'good', connMsg = 'Stable connection';
@@ -343,9 +364,9 @@ async function renderEnvironment() {
 
     // Battery
     let batClass = 'good', batMsg = 'Battery sufficient';
-    if (battery < 20 && !dev.battery.charging) {
+    if (battery < 20 && !dev.battery?.charging) {
       batClass = 'bad'; batMsg = 'Battery critically low – plug in before continuing';
-    } else if (battery < 50 && !dev.battery.charging) {
+    } else if (battery < 50 && !dev.battery?.charging) {
       batClass = 'warn'; batMsg = 'Battery moderate – consider charging';
     }
 
@@ -355,7 +376,7 @@ async function renderEnvironment() {
         <div class="env-msg">${connMsg}</div>
       </div>
       <div class="env-badge ${screenClass}">
-        <strong>🖥️Screen:</strong> ${dev.screen.w}×${dev.screen.h}
+        <strong>🖥️Screen:</strong> ${dev.screen?.w}×${dev.screen?.h}
         <div class="env-msg">${screenMsg}</div>
       </div>
       <div class="env-badge ${kbClass}">
@@ -363,7 +384,7 @@ async function renderEnvironment() {
         <div class="env-msg">${kbMsg}</div>
       </div>
       <div class="env-badge ${batClass}">
-        <strong>🔋Battery:</strong> ${battery}% ${dev.battery.charging ? '(charging)' : ''}
+        <strong>🔋Battery:</strong> ${battery}% ${dev.battery?.charging ? '(charging)' : ''}
         <div class="env-msg">${batMsg}</div>
       </div>
     `;
@@ -375,8 +396,8 @@ async function renderEnvironment() {
       if (latency > 300) score -= 20;
       if (!screenOk) score -= 15;
       if (!keyboardOk) score -= 10;
-      if (battery < 50 && !dev.battery.charging) score -= 20;
-      if (battery < 20 && !dev.battery.charging) score -= 50;
+      if (battery < 50 && !dev.battery?.charging) score -= 20;
+      if (battery < 20 && !dev.battery?.charging) score -= 50;
     }
     score = Math.max(0, score);
 
@@ -395,18 +416,17 @@ async function renderEnvironment() {
     }
   }
 
-  // --- save env_check to DB ---
+  // --- save env_check to DB (safe-guarded) ---
   try {
     const { data: userRes } = await client.auth.getUser();
-    if (!userRes?.user) return;
+    if (!userRes?.user) throw new Error("No auth user");
 
-    const { data: appUser, error: appErr } = await client
+    const { data: appUser } = await client
       .from('app_users')
       .select('id')
       .eq('supabase_user_id', userRes.user.id)
       .single();
-
-    if (appErr || !appUser) return;
+    if (!appUser) throw new Error("No app_user found");
 
     const { data: uas } = await client
       .from('user_assessments')
@@ -415,17 +435,17 @@ async function renderEnvironment() {
       .neq('status', 'completed')
       .order('created_at', { ascending: false });
 
-    if (!uas || uas.length === 0) return;
-
-    const ua = uas[0];
-    const newMeta = { ...(ua.prep_meta || {}), env_check: { conn, dev } };
-
-    await client
-      .from('user_assessments')
-      .update({ prep_meta: newMeta, updated_at: new Date().toISOString() })
-      .eq('id', ua.id);
-
-    console.log(`✅ Environment saved to prep_meta for user_assessments.id = ${ua.id}`);
+    if (!uas || uas.length === 0) {
+      console.warn("⚠ No user_assessments found, skipping env_check save");
+    } else {
+      const ua = uas[0];
+      const newMeta = { ...(ua.prep_meta || {}), env_check: { conn, dev } };
+      await client
+        .from('user_assessments')
+        .update({ prep_meta: newMeta, updated_at: new Date().toISOString() })
+        .eq('id', ua.id);
+      console.log(`✅ Environment saved to prep_meta for user_assessments.id = ${ua.id}`);
+    }
   } catch (e) {
     console.error('❌ Failed to update env_check:', e);
   }
@@ -436,6 +456,7 @@ async function renderEnvironment() {
   setStatus('Ready');
   show('prep-environment');
 }
+
 
 // --- Mood Section Logic ---
 (() => {
