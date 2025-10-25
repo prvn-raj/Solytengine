@@ -53,7 +53,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('question-container').innerHTML = '<p>❌ No assessment ID provided.</p>';
     return;
   }
-  const { data: meta } = await client.from("assessments").select("total_questions").eq("id", assessmentId).single();
+  const { data: meta } = await client.from("assessments").select("total_questions, randomize_questions").eq("id", assessmentId).single();
   const { data: mapping } = await client.from("assessment_tendency_weights").select("*").eq("assessment_id", assessmentId);
   const { data: tendencies } = await client.from("tendencies").select("id, name, color");
   const { data: rawQuestions } = await client.from("questions").select("*, question_option_tendencies (tendency_id, option_value)").eq("is_active", true);
@@ -120,7 +120,15 @@ window.addEventListener('DOMContentLoaded', async () => {
 
 
 
-  const selectedQuestions = getQuestionsForAssessment(questions, mapping, meta.total_questions);
+  const randomizeMode = !!meta.randomize_questions;
+const selectedQuestions = getQuestionsForAssessment(
+  questions,
+  mapping,
+  meta.total_questions,
+  0.3,
+  randomizeMode
+);
+
   selectedQuestions.sort((a, b) => a.question_id.localeCompare(b.question_id));
   renderQuestions(selectedQuestions, meta.total_questions, tendencyMap, mapping);
 
